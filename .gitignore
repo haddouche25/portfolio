@@ -13,25 +13,17 @@
 # testing
 /coverage
 
-# next.js
+# next.js build output
 /.next/
 /out/
+.next/standalone
 
 # production
 /build
 
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
+# environment files
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -39,6 +31,22 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
- 
-.env* 
-!.env.example 
+
+# debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# system & editor misc
+.DS_Store
+Thumbs.db
+*.pem
+.vscode/
+.idea/
+
+# AI & Agent local metadata
+.agents/
+.claude/
+.cursor/
+.devin/

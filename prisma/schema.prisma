@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Pillar {
+  id            String     @id @default(cuid())
+  slug          String     @unique // "maths", "coding", "computing"
+  titleEn       String     // e.g. "Mathematics"
+  titleFr       String     // e.g. "Mathématiques"
+  descriptionEn String?    @db.Text
+  descriptionFr String?    @db.Text
+  icon          String?
+  categories    Category[]
+  createdAt     DateTime   @default(now())
+}
+
+model Category {
+  id            String    @id @default(cuid())
+  slug          String    @unique // "high-school", "didactics", "math-for-ai", "dsa", etc.
+  titleEn       String    // e.g. "Didactics & Pedagogy"
+  titleFr       String    // e.g. "Didactique & Pédagogie"
+  descriptionEn String?   @db.Text
+  descriptionFr String?   @db.Text
+  pillarId      String
+  pillar        Pillar    @relation(fields: [pillarId], references: [id], onDelete: Cascade)
+  articles      Article[]
+  createdAt     DateTime  @default(now())
+}
+
+model Article {
+  id          String   @id @default(cuid())
+  slug        String
+  titleEn     String
+  titleFr     String
+  excerptEn   String?  @db.Text
+  excerptFr   String?  @db.Text
+  contentEn   String   @db.LongText // Markdown + LaTeX (English)
+  contentFr   String   @db.LongText // Markdown + LaTeX (French)
+  youtubeUrl  String?
+  published   Boolean  @default(true)
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([categoryId, slug])
+}
