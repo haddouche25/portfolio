@@ -49,3 +49,114 @@ model Article {
 
   @@unique([categoryId, slug])
 }
+
+enum SchoolLevel {
+  COLLEGE_3AC      @map("3AC")
+  TRONC_COMMUN     @map("Tronc commun")
+  BAC1_SM          @map("1bac SM")
+  BAC1_S           @map("1bac S")
+  BAC2_SM          @map("2bac SM")
+  BAC2_S           @map("2bac S")
+}
+
+model QcmExam {
+  id               String            @id @default(cuid())
+  title            String
+  slug             String            @unique
+  description      String?           @db.Text
+  level            SchoolLevel       @default(BAC1_SM)
+  timeLimitMinutes Int?
+  published        Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  questions        QcmExamQuestion[]
+  attempts         QcmAttempt[]
+
+  @@index([level])
+}
+
+model QcmExamQuestion {
+  id         String      @id @default(cuid())
+  examId     String
+  questionId String
+  order      Int         @default(1)
+
+  exam       QcmExam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  question   QcmQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, questionId])
+  @@index([examId])
+  @@index([questionId])
+}
+
+model QcmQuestion {
+  id          String            @id @default(cuid())
+  topic       String
+  difficulty  String
+  question    String            @db.Text
+  imageUrl    String?
+  explanation String?           @db.Text
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  options     QcmOption[]
+  exams       QcmExamQuestion[]
+  answers     QcmAnswer[]
+}
+
+model QcmOption {
+  id         String      @id @default(cuid())
+  questionId String
+  text       String      @db.Text
+  imageUrl   String?
+  isCorrect  Boolean     @default(false)
+
+  question   QcmQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers    QcmAnswer[]
+
+  @@index([questionId])
+}
+
+model Student {
+  id        String       @id @default(cuid())
+  fullName  String
+  email     String       @unique
+  createdAt DateTime     @default(now())
+
+  attempts  QcmAttempt[]
+}
+
+model QcmAttempt {
+  id             String      @id @default(cuid())
+  examId         String
+  studentId      String
+  score          Int
+  totalQuestions Int
+  percentage     Float
+  startedAt      DateTime    @default(now())
+  completedAt    DateTime?   
+
+  exam           QcmExam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student        Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  answers        QcmAnswer[]
+
+  @@index([examId])
+  @@index([studentId])
+}
+
+model QcmAnswer {
+  id               String      @id @default(cuid())
+  attemptId        String
+  questionId       String
+  selectedOptionId String?
+  isCorrect        Boolean     @default(false)
+
+  attempt          QcmAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question         QcmQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption   QcmOption?  @relation(fields: [selectedOptionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, questionId])
+  @@index([attemptId])
+  @@index([questionId])
+}

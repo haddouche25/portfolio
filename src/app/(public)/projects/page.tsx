@@ -79,7 +79,6 @@ export default async function ProjectsPage({ searchParams }: BasePageProps) {
   const { lang } = await searchParams;
   const locale = resolveLocale(lang);
   const isFr = locale === "fr";
-  const langSuffix = isFr ? "?lang=fr" : "";
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-20 space-y-16">

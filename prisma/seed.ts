@@ -6,9 +6,15 @@ const adapter = new PrismaMariaDb(process.env.DATABASE_URL!);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log("Starting bilingual seed (FR & EN)...");
+  console.log("Starting database seed (Pillars, Articles & QCM)...");
 
-  // 1. Clean existing records
+  // 1. Clean existing records in correct relation order
+  await prisma.qcmAnswer.deleteMany({});
+  await prisma.qcmAttempt.deleteMany({});
+  await prisma.student.deleteMany({});
+  await prisma.qcmOption.deleteMany({});
+  await prisma.qcmQuestion.deleteMany({});
+
   await prisma.article.deleteMany({});
   await prisma.category.deleteMany({});
   await prisma.pillar.deleteMany({});
@@ -214,7 +220,86 @@ def descente_gradient(x_depart: float, lr: float, iterations: int) -> float:
     });
   }
 
-  console.log("Database seeded successfully with bilingual content (FR & EN).");
+  // 6. Seed French QCM Questions (Maths & Coding with KaTeX)
+  await prisma.qcmQuestion.create({
+    data: {
+      topic: "Mathématiques",
+      difficulty: "Moyen",
+      question:
+        "Soit la fonction $f(x) = 3x^2 - 4x + 1$ définie sur $\\mathbb{R}$. Quelle est sa dérivée première $f'(x)$ ?",
+      explanation:
+        "Par dérivation d'un polynôme standard : $(x^n)' = n x^{n-1}$. Dès lors, $(3x^2)' = 6x$ et $(-4x)' = -4$. On obtient donc $f'(x) = 6x - 4$.",
+      options: {
+        create: [
+          { text: "$f'(x) = 6x - 4$", isCorrect: true },
+          { text: "$f'(x) = 3x - 4$", isCorrect: false },
+          { text: "$f'(x) = 6x^2 - 4$", isCorrect: false },
+          { text: "$f'(x) = 6x + 1$", isCorrect: false },
+        ],
+      },
+    },
+  });
+
+  await prisma.qcmQuestion.create({
+    data: {
+      topic: "Mathématiques",
+      difficulty: "Difficile",
+      question:
+        "Quelle est la valeur exacte de l'intégrale définie $\\int_{0}^{1} (4x^3 + 2x) \\, dx$ ?",
+      explanation:
+        "Une primitive de $4x^3 + 2x$ est $F(x) = x^4 + x^2$. En évaluant entre $0$ et $1$ : $F(1) - F(0) = (1^4 + 1^2) - 0 = 1 + 1 = 2$.",
+      options: {
+        create: [
+          { text: "$2$", isCorrect: true },
+          { text: "$1$", isCorrect: false },
+          { text: "$4$", isCorrect: false },
+          { text: "$\\frac{5}{2}$", isCorrect: false },
+        ],
+      },
+    },
+  });
+
+  await prisma.qcmQuestion.create({
+    data: {
+      topic: "Programmation",
+      difficulty: "Facile",
+      question:
+        "En JavaScript / TypeScript, que renvoie l'évaluation de l'expression `typeof NaN` ?",
+      explanation:
+        "En spécification ECMAScript, bien que `NaN` représente « Not-a-Number », sa valeur appartient au type primitif `number`.",
+      options: {
+        create: [
+          { text: '`"number"`', isCorrect: true },
+          { text: '`"nan"`', isCorrect: false },
+          { text: '`"undefined"`', isCorrect: false },
+          { text: '`"object"`', isCorrect: false },
+        ],
+      },
+    },
+  });
+
+  await prisma.qcmQuestion.create({
+    data: {
+      topic: "Programmation",
+      difficulty: "Moyen",
+      question:
+        "Quelle est la complexité temporelle asymptotique au pire des cas de la recherche d'un élément dans un tableau trié de taille $n$ par recherche dichotomique (Binary Search) ?",
+      explanation:
+        "La recherche dichotomique divise l'intervalle de recherche par deux à chaque étape, d'où une relation de récurrence $T(n) = T(n/2) + O(1)$, ce qui donne une complexité temporelle en $\\mathcal{O}(\\log n)$.",
+      options: {
+        create: [
+          { text: "$\\mathcal{O}(\\log n)$", isCorrect: true },
+          { text: "$\\mathcal{O}(n)$", isCorrect: false },
+          { text: "$\\mathcal{O}(n \\log n)$", isCorrect: false },
+          { text: "$\\mathcal{O}(1)$", isCorrect: false },
+        ],
+      },
+    },
+  });
+
+  console.log(
+    "Database seeded successfully with bilingual pillars, articles, and QCM questions.",
+  );
 }
 
 main()

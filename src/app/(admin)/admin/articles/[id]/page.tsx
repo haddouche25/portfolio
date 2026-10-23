@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
 import { prisma } from "@/lib/db";
 import ArticleForm from "@/components/admin/ArticleForm";
 

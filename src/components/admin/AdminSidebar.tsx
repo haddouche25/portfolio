@@ -1,9 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 
-const NAV_ITEMS = [
+interface NavItem {
+  label: string;
+  href: string;
+  exact: boolean;
+  icon: React.ReactNode;
+}
+
+const CONTENT_NAV_ITEMS: NavItem[] = [
   {
     label: "Dashboard",
     href: "/admin",
@@ -86,8 +95,107 @@ const NAV_ITEMS = [
   },
 ];
 
+const QCM_NAV_ITEMS: NavItem[] = [
+  {
+    label: "Examens",
+    href: "/admin/qcm/exams",
+    exact: false,
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.75"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: "Questions QCM",
+    href: "/admin/qcm/questions",
+    exact: false,
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.75"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M12 18h.008v.008H12V18ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: "Résultats Élèves",
+    href: "/admin/qcm",
+    exact: true,
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.75"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-5.25 6.557q0 1.25.105 2.474"
+        />
+      </svg>
+    ),
+  },
+];
+
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await signOut({ callbackUrl: "/admin/login" });
+  };
+
+  const renderNavGroup = (title: string, items: NavItem[]) => (
+    <div className="space-y-1">
+      <div className="px-3 pb-1 text-[10px] font-mono uppercase tracking-wider text-slate-500">
+        {title}
+      </div>
+      {items.map((item) => {
+        const isActive = item.exact
+          ? pathname === item.href
+          : pathname.startsWith(item.href);
+
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              isActive
+                ? "bg-blue-600/15 text-blue-400 font-semibold"
+                : "text-slate-400 hover:text-slate-100 hover:bg-slate-900"
+            }`}
+          >
+            <span className={isActive ? "text-blue-400" : "text-slate-500"}>
+              {item.icon}
+            </span>
+            <span>{item.label}</span>
+          </Link>
+        );
+      })}
+    </div>
+  );
 
   return (
     <aside className="w-64 shrink-0 border-r border-slate-800 bg-slate-950 text-slate-300 flex flex-col justify-between min-h-screen">
@@ -107,41 +215,19 @@ export default function AdminSidebar() {
           </div>
         </div>
 
-        {/* Navigation Section */}
-        <nav className="p-4 space-y-1.5">
-          <div className="px-3 pb-2 text-[10px] font-mono uppercase tracking-wider text-slate-500">
-            Content Engine
-          </div>
-
-          {NAV_ITEMS.map((item) => {
-            const isActive = item.exact
-              ? pathname === item.href
-              : pathname.startsWith(item.href);
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-blue-600/15 text-blue-400 font-semibold"
-                    : "text-slate-400 hover:text-slate-100 hover:bg-slate-900"
-                }`}
-              >
-                <span className={isActive ? "text-blue-400" : "text-slate-500"}>
-                  {item.icon}
-                </span>
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+        {/* Navigation Sections */}
+        <nav className="p-4 space-y-5">
+          {renderNavGroup("Content Engine", CONTENT_NAV_ITEMS)}
+          {renderNavGroup("Exam & Didactique", QCM_NAV_ITEMS)}
         </nav>
       </div>
 
-      {/* Footer / External Links */}
+      {/* Footer / External Links & Logout */}
       <div className="p-4 border-t border-slate-800/80 space-y-2">
+        {/* Public Site Link */}
         <Link
           href="/"
+          target="_blank"
           className="flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-900 transition-colors"
         >
           <span className="flex items-center gap-2">
@@ -163,7 +249,34 @@ export default function AdminSidebar() {
           <span className="font-mono text-[10px] text-slate-600">&rarr;</span>
         </Link>
 
-        <div className="px-3 py-2 text-[11px] font-mono text-slate-600 flex items-center justify-between">
+        {/* Terminate Session / Sign Out */}
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-red-400 hover:bg-red-950/20 transition-colors disabled:opacity-50"
+        >
+          <span className="flex items-center gap-2">
+            <svg
+              className="w-4 h-4 text-slate-500 group-hover:text-red-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.75"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"
+              />
+            </svg>
+            {isLoggingOut ? "Ending Session..." : "Logout"}
+          </span>
+          <span className="font-mono text-[10px] text-slate-600">ESC</span>
+        </button>
+
+        {/* Runtime System Indicator */}
+        <div className="px-3 py-2 text-[11px] font-mono text-slate-600 flex items-center justify-between border-t border-slate-900 pt-3">
           <span>MariaDB + Next 16</span>
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
         </div>

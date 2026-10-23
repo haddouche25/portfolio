@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { connection } from "next/server";
 import { prisma } from "@/lib/db";
 import ArticleRowActions from "@/components/admin/ArticleRowActions";
 
