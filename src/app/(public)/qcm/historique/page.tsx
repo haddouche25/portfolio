@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { getStudentHistoryByEmail } from "@/lib/actions/qcm-student";
 import AttemptReviewModal from "@/components/qcm/AttemptReviewModal";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 
 type StudentAttempt = {
   id: string;
@@ -19,10 +20,23 @@ type StudentAttempt = {
   completedAt: string | null;
 };
 
+/* Couleur selon le résultat : rouge < 50, ambre 50-74, vert >= 75 */
+function tone(percentage: number) {
+  if (percentage >= 75)
+    return {
+      bar: "bg-emerald-500",
+      text: "text-emerald-600 dark:text-emerald-400",
+    };
+  if (percentage >= 50)
+    return { bar: "bg-amber-500", text: "text-amber-600 dark:text-amber-400" };
+  return { bar: "bg-brand-red", text: "text-brand-red" };
+}
+
 export default function StudentHistoryPage() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [studentName, setStudentName] = useState<string | null>(null);
   const [attempts, setAttempts] = useState<StudentAttempt[]>([]);
   const [reviewAttemptId, setReviewAttemptId] = useState<string | null>(null);
@@ -32,6 +46,7 @@ export default function StudentHistoryPage() {
     if (!email.trim()) return;
 
     setIsLoading(true);
+    setError(null);
     try {
       const res = await getStudentHistoryByEmail(email);
       setHasSearched(true);
@@ -42,178 +57,233 @@ export default function StudentHistoryPage() {
         setStudentName(null);
         setAttempts([]);
       }
+    } catch {
+      setError("Une erreur est survenue. Veuillez réessayer dans un instant.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 py-12 px-4 sm:px-6">
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Navigation & En-tête */}
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-background text-ink font-sans antialiased selection:bg-brand-red selection:text-white">
+      <main className="max-w-4xl mx-auto py-12 px-4 sm:px-6 space-y-8">
+        {/* Navigation */}
+        <div className="flex items-center justify-between gap-3">
           <Link
             href="/qcm"
-            className="text-xs font-mono text-slate-400 hover:text-white flex items-center gap-1.5 transition"
+            className="text-xs font-bold text-muted hover:text-brand-red flex items-center gap-1.5 transition"
           >
             &larr; Retour au catalogue QCM
           </Link>
-          <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-blue-950/60 border border-blue-800 text-blue-300">
-            Espace Candidat
-          </span>
         </div>
 
+        {/* En-tête */}
         <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">
-            Mon Historique d&apos;Évaluations
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
+            Mon Historique d&apos;
+            <span className="np-highlight">Évaluations</span>
           </h1>
-          <p className="text-slate-400 text-sm mt-1">
+          <p className="text-muted text-sm mt-3 max-w-2xl leading-relaxed">
             Consultez vos scores et analysez vos corrections détaillées dès
             qu&apos;une épreuve est achevée.
           </p>
         </div>
 
-        {/* Formulaire de recherche par email */}
+        {/* Recherche par email */}
         <form
           onSubmit={handleSearch}
-          className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row gap-3 items-center shadow-lg"
+          className="np-card p-4 sm:p-5 flex flex-col sm:flex-row gap-3 items-stretch sm:items-end"
         >
-          <div className="relative w-full">
+          <div className="w-full">
+            <label className="np-label" htmlFor="history-email">
+              Adresse email utilisée lors du test
+            </label>
             <input
+              id="history-email"
               required
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Saisissez votre adresse email (ex: haddouche@gmail.com)"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
+              placeholder="ex : prenom.nom@gmail.com"
+              className="np-input"
             />
           </div>
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition shrink-0"
+            className="np-btn-primary shrink-0 disabled:opacity-50 disabled:pointer-events-none"
           >
-            {isLoading ? "Recherche..." : "Consulter mes résultats"}
+            {isLoading ? "Recherche..." : "Consulter mes résultats →"}
           </button>
         </form>
 
+        {error && (
+          <div
+            role="alert"
+            className="p-4 rounded-xl border border-brand-red/40 bg-brand-red/10 text-brand-red text-sm font-semibold"
+          >
+            {error}
+          </div>
+        )}
+
         {/* Résultats */}
         {hasSearched && (
-          <div className="space-y-4">
+          <section className="space-y-4">
             {studentName ? (
-              <div className="text-xs text-slate-400 flex items-center gap-2">
+              <div className="text-xs text-muted flex flex-wrap items-center gap-2">
                 <span>Élève identifié :</span>
-                <strong className="text-white font-medium">
-                  {studentName}
-                </strong>
+                <strong className="text-ink font-black">{studentName}</strong>
                 <span>•</span>
                 <span>
                   {attempts.length} tentative{attempts.length > 1 ? "s" : ""}
                 </span>
               </div>
             ) : (
-              <div className="p-8 text-center bg-slate-900/50 border border-slate-800 rounded-2xl text-slate-400 text-sm">
+              <div className="np-card p-10 text-center text-muted text-sm">
                 Aucune tentative trouvée pour l&apos;adresse{" "}
-                <strong className="text-slate-200">{email}</strong>.
+                <strong className="text-ink">{email}</strong>.
+                <div className="mt-4">
+                  <Link href="/qcm" className="np-btn-primary">
+                    PASSER UN TEST →
+                  </Link>
+                </div>
               </div>
             )}
 
             <div className="space-y-3">
-              {attempts.map((att) => (
-                <div
-                  key={att.id}
-                  className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-slate-700/80 transition"
-                >
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base font-bold text-white">
-                        {att.examTitle}
-                      </span>
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
-                          att.isCompleted
-                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                            : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                        }`}
-                      >
+              {attempts.map((att) => {
+                const c = tone(att.percentage);
+                const progress = att.isCompleted
+                  ? att.percentage
+                  : att.totalQuestions > 0
+                    ? Math.round((att.answeredCount / att.totalQuestions) * 100)
+                    : 0;
+
+                return (
+                  <article
+                    key={att.id}
+                    className="np-card np-card-hover p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-5"
+                  >
+                    {/* Infos */}
+                    <div className="space-y-2 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="text-base font-black text-ink">
+                          {att.examTitle}
+                        </h2>
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            att.isCompleted ? "bg-emerald-400" : "bg-amber-400"
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                            att.isCompleted
+                              ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+                              : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30"
                           }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              att.isCompleted
+                                ? "bg-emerald-500"
+                                : "bg-amber-500"
+                            }`}
+                          />
+                          {att.isCompleted ? "Terminé" : "En cours"}
+                        </span>
+                      </div>
+
+                      <div className="text-xs text-muted font-mono flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span>
+                          Débuté le{" "}
+                          {new Date(att.startedAt).toLocaleDateString("fr-FR")}{" "}
+                          à{" "}
+                          {new Date(att.startedAt).toLocaleTimeString("fr-FR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                        {!att.isCompleted && (
+                          <>
+                            <span>•</span>
+                            <span>
+                              {att.answeredCount} / {att.totalQuestions}{" "}
+                              questions répondues
+                            </span>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Barre de progression / résultat */}
+                      <div
+                        className="h-1.5 w-full max-w-xs rounded-full bg-surface2 border border-line overflow-hidden"
+                        role="progressbar"
+                        aria-valuenow={progress}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      >
+                        <div
+                          className={`h-full rounded-full ${
+                            att.isCompleted ? c.bar : "bg-brand-orange"
+                          }`}
+                          style={{ width: `${progress}%` }}
                         />
-                        {att.isCompleted ? "Terminé" : "En cours"}
-                      </span>
+                      </div>
                     </div>
 
-                    <div className="text-xs text-slate-500 font-mono flex items-center gap-3">
-                      <span>
-                        Débuté le{" "}
-                        {new Date(att.startedAt).toLocaleDateString("fr-FR")} à{" "}
-                        {new Date(att.startedAt).toLocaleTimeString("fr-FR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
+                    {/* Score + actions */}
+                    <div className="flex flex-wrap items-center justify-between lg:justify-end gap-3 pt-4 lg:pt-0 border-t lg:border-t-0 border-line">
+                      <div className="text-right pr-2">
+                        {att.isCompleted ? (
+                          <>
+                            <div className={`text-xl font-black ${c.text}`}>
+                              {att.score} / {att.totalQuestions}
+                            </div>
+                            <div className="text-[11px] text-muted font-bold">
+                              {att.percentage}%
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-xs text-muted font-bold">
+                            Score à la fin
+                            <br />
+                            de l&apos;épreuve
+                          </div>
+                        )}
+                      </div>
+
                       {!att.isCompleted && (
-                        <>
-                          <span>•</span>
-                          <span className="text-slate-400">
-                            {att.answeredCount} / {att.totalQuestions} questions
-                            répondues
-                          </span>
-                        </>
+                        <Link
+                          href={`/qcm/${att.examSlug}`}
+                          className="np-btn-primary !py-2.5 !px-4"
+                        >
+                          Reprendre →
+                        </Link>
+                      )}
+
+                      {att.isCompleted ? (
+                        <button
+                          type="button"
+                          onClick={() => setReviewAttemptId(att.id)}
+                          className="px-4 py-2.5 rounded-xl border-2 border-ink text-ink hover:bg-brand-red hover:border-brand-red hover:text-white text-xs font-black uppercase tracking-wider transition"
+                        >
+                          Réponses &amp; correction
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled
+                          title="Disponible une fois l'épreuve terminée"
+                          className="px-4 py-2.5 rounded-xl border border-line bg-surface2 text-muted text-xs font-bold uppercase tracking-wider cursor-not-allowed select-none opacity-60"
+                        >
+                          Réponses &amp; correction
+                        </button>
                       )}
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-between sm:justify-end gap-3 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-800/60">
-                    <div className="text-right pr-2">
-                      <div className="text-sm font-bold text-blue-400">
-                        {att.score} / {att.totalQuestions}
-                      </div>
-                      <div className="text-[11px] text-slate-400 font-semibold">
-                        {att.percentage}%
-                      </div>
-                    </div>
-
-                    {/* Bouton pour reprendre le test si non terminé */}
-                    {!att.isCompleted && (
-                      <Link
-                        href={`/qcm/${att.examSlug}`}
-                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-md shadow-blue-600/20"
-                      >
-                        Reprendre →
-                      </Link>
-                    )}
-
-                    {/* Bouton Consultation des réponses : actif si terminé, sinon grisé sombre et désactivé */}
-                    {att.isCompleted ? (
-                      <button
-                        type="button"
-                        onClick={() => setReviewAttemptId(att.id)}
-                        className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition border border-slate-700 shadow-sm"
-                      >
-                        Réponses & correction
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        disabled
-                        title="Disponible une fois l'épreuve terminée"
-                        className="px-3.5 py-2 bg-slate-950/80 text-slate-600 border border-slate-900 text-xs font-medium rounded-xl cursor-not-allowed select-none opacity-60"
-                      >
-                        Réponses & correction
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                  </article>
+                );
+              })}
             </div>
-          </div>
+          </section>
         )}
-      </div>
+      </main>
 
-      {/* Modale d'affichage des réponses et corrections */}
+      {/* Modale de correction */}
       <AttemptReviewModal
         attemptId={reviewAttemptId}
         onClose={() => setReviewAttemptId(null)}
