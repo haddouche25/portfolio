@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import MathText from "@/components/qcm/MathText";
 import {
@@ -29,6 +29,18 @@ interface Props {
   questions: Question[];
 }
 
+/**
+ * Fisher-Yates shuffle algorithm for uniform randomization
+ */
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 /* Couleur selon le résultat : rouge < 50, ambre 50-74, vert >= 75 */
 function tone(percentage: number) {
   if (percentage >= 75)
@@ -51,6 +63,10 @@ function tone(percentage: number) {
 }
 
 export default function StudentExamRunner({ examId, title, questions }: Props) {
+  // Shuffled questions state (keeps choices random per session but stable across renders)
+  const [shuffledQuestions, setShuffledQuestions] =
+    useState<Question[]>(questions);
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [attemptId, setAttemptId] = useState<string | null>(null);
@@ -69,6 +85,16 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
     percentage: number;
   } | null>(null);
 
+  // Randomize the options once upon client mount
+  useEffect(() => {
+    setShuffledQuestions(
+      questions.map((q) => ({
+        ...q,
+        options: shuffleArray(q.options),
+      })),
+    );
+  }, [questions]);
+
   // 1. Démarrage ou Reprise via Email
   const handleStartOrResume = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +107,7 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
         examId,
         email,
         fullName,
-        totalQuestions: questions.length,
+        totalQuestions: shuffledQuestions.length,
       });
 
       setAttemptId(session.attemptId);
@@ -90,7 +116,7 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
 
       // Reprise : se placer sur la première question sans réponse
       if (session.isResumed) {
-        const firstUnansweredIndex = questions.findIndex(
+        const firstUnansweredIndex = shuffledQuestions.findIndex(
           (q) => !session.savedAnswers[q.id],
         );
         setCurrentIndex(firstUnansweredIndex !== -1 ? firstUnansweredIndex : 0);
@@ -106,9 +132,11 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
     }
   };
 
-  const currentQ = questions[currentIndex];
-  const isLast = currentIndex === questions.length - 1;
-  const answeredCount = questions.filter((q) => selectedAnswers[q.id]).length;
+  const currentQ = shuffledQuestions[currentIndex];
+  const isLast = currentIndex === shuffledQuestions.length - 1;
+  const answeredCount = shuffledQuestions.filter(
+    (q) => selectedAnswers[q.id],
+  ).length;
 
   // 2. Sélection d'une réponse (enregistrée immédiatement en base)
   const handleSelectOption = async (optId: string) => {
@@ -171,7 +199,7 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
   /* ============ ÉCRAN 1 : accès / reprise ============ */
   if (!hasStarted) {
     return (
-      <div className=" p-6 sm:p-8 space-y-6">
+      <div className="p-6 sm:p-8 space-y-6">
         <div>
           <span className="np-eyebrow">Accès à l&apos;épreuve</span>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-ink leading-tight">
@@ -291,7 +319,7 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
             Correction <span className="np-highlight">didactique</span>
           </h2>
 
-          {questions.map((q, idx) => {
+          {shuffledQuestions.map((q, idx) => {
             const userChoiceId = selectedAnswers[q.id];
             const correctOpt = q.options.find((o) => o.isCorrect);
             const userOpt = q.options.find((o) => o.id === userChoiceId);
@@ -364,7 +392,9 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
   }
 
   /* ============ ÉCRAN 3 : déroulement ============ */
-  const progress = Math.round(((currentIndex + 1) / questions.length) * 100);
+  const progress = Math.round(
+    ((currentIndex + 1) / shuffledQuestions.length) * 100,
+  );
 
   return (
     <div className="p-5 sm:p-8 space-y-6">
@@ -380,7 +410,7 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
         </div>
         <div className="text-right">
           <span className="font-mono font-bold text-ink">
-            Question {currentIndex + 1} sur {questions.length}
+            Question {currentIndex + 1} sur {shuffledQuestions.length}
           </span>
           <span className="mt-0.5 flex items-center justify-end gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -404,12 +434,12 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
           />
         </div>
 
-        {/* Indicateur visuel uniquement : épreuve linéaire, aucune navigation */}
+        {/* Indicateur visuel */}
         <div
           className="flex flex-wrap items-center gap-1.5 select-none"
           aria-hidden="true"
         >
-          {questions.map((q, i) => {
+          {shuffledQuestions.map((q, i) => {
             const isCurrent = i === currentIndex;
             const isAnswered = Boolean(selectedAnswers[q.id]);
             return (
@@ -428,7 +458,7 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
             );
           })}
           <span className="ml-auto text-[11px] text-muted font-mono">
-            {answeredCount}/{questions.length} répondues
+            {answeredCount}/{shuffledQuestions.length} répondues
           </span>
         </div>
       </div>
@@ -438,7 +468,7 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
         <MathText content={currentQ.question} />
       </div>
 
-      {/* Options */}
+      {/* Options (shuffled randomly per session) */}
       <div className="space-y-3">
         {currentQ.options.map((opt, i) => {
           const isSelected = selectedAnswers[currentQ.id] === opt.id;

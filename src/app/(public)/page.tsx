@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import MathText from "@/components/qcm/MathText";
+import { submitContactMessage } from "@/lib/actions/contact";
+import { useLanguage } from "@/context/LanguageContext";
 
 const content = {
   FR: {
@@ -934,7 +936,6 @@ const CERT_STYLES = [
   },
 ];
 
-/* Couleurs des puces de parcours (section Computing, fond sombre) */
 const PATH_STYLES = [
   "bg-blue-500/10 border-blue-500/30 text-blue-300",
   "bg-orange-500/10 border-orange-500/30 text-orange-300",
@@ -944,7 +945,6 @@ const PATH_STYLES = [
   "bg-amber-500/10 border-amber-500/30 text-amber-300",
 ];
 
-/* Fenêtre "terminal" décorative (identique dans les deux langues) */
 const TERMINAL_LINES: { text: string; color: string }[] = [
   { text: ">>> a, b = True, False", color: "text-slate-200" },
   { text: ">>> a and not b", color: "text-slate-200" },
@@ -961,7 +961,10 @@ const TERMINAL_LINES: { text: string; color: string }[] = [
 
 export default function ProfessionalLandingPage() {
   const router = useRouter();
-  const [lang, setLang] = useState<"FR" | "EN">("FR");
+
+  // 👉 On consomme la langue globale partagée avec le Header
+  const { lang } = useLanguage();
+
   const [activeTab, setActiveTab] = useState<"education" | "tech">("education");
   const [coachingTab, setCoachingTab] = useState<"families" | "schools">(
     "families",
@@ -970,6 +973,52 @@ export default function ProfessionalLandingPage() {
   const [qcmLevel, setQcmLevel] = useState("Tronc commun");
 
   const t = content[lang];
+
+  // Formulaire de contact
+  const [contactForm, setContactForm] = useState({
+    fullName: "",
+    email: "",
+    category: t.contact.opt1,
+    message: "",
+  });
+  const [contactSubmitting, setContactSubmitting] = useState(false);
+  const [contactStatus, setContactStatus] = useState<{
+    type: "success" | "error" | null;
+    text: string;
+  }>({ type: null, text: "" });
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setContactSubmitting(true);
+    setContactStatus({ type: null, text: "" });
+
+    const res = await submitContactMessage(contactForm);
+
+    if (res.success) {
+      setContactStatus({
+        type: "success",
+        text:
+          lang === "FR"
+            ? "Demande transmise avec succès ! Mohamed vous recontactera rapidement."
+            : "Your inquiry has been successfully sent! Mohamed will get back to you shortly.",
+      });
+      setContactForm({
+        fullName: "",
+        email: "",
+        category: t.contact.opt1,
+        message: "",
+      });
+    } else {
+      setContactStatus({
+        type: "error",
+        text:
+          res.error ||
+          (lang === "FR" ? "Erreur d'envoi." : "Submission error."),
+      });
+    }
+
+    setContactSubmitting(false);
+  };
 
   const certsText = t.certs as Record<string, string>;
   const certs = [1, 2, 3, 4].map((n, i) => ({
@@ -1151,7 +1200,6 @@ export default function ProfessionalLandingPage() {
       {/* ========================= MATH COACHING ========================= */}
       <section id="coaching" className="py-20 w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          {/* Titre */}
           <div className="text-center max-w-3xl mx-auto">
             <span className="np-eyebrow">{t.coaching.tag}</span>
             <h2 className="text-3xl sm:text-5xl font-black text-ink tracking-tight leading-[1.1]">
@@ -1163,7 +1211,6 @@ export default function ProfessionalLandingPage() {
             </p>
           </div>
 
-          {/* Niveaux */}
           <div className="mt-8 flex flex-col items-center gap-3">
             <span className="text-[11px] font-black uppercase tracking-widest text-muted">
               {t.coaching.levelsLabel}
@@ -1180,7 +1227,6 @@ export default function ProfessionalLandingPage() {
             </div>
           </div>
 
-          {/* Méthode en 4 étapes */}
           <div className="mt-16">
             <h3 className="text-center text-xl font-black text-ink mb-10 flex items-center justify-center gap-3">
               <span className="h-0.5 w-6 bg-brand-red rounded" />
@@ -1211,7 +1257,6 @@ export default function ProfessionalLandingPage() {
             </div>
           </div>
 
-          {/* Formules : onglets Familles / Établissements */}
           <div className="mt-20">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-10">
               <div>
@@ -1300,7 +1345,6 @@ export default function ProfessionalLandingPage() {
             </div>
           </div>
 
-          {/* Engagements */}
           <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-4">
             {t.coaching.assurance.map((a) => (
               <div
@@ -1320,7 +1364,6 @@ export default function ProfessionalLandingPage() {
             ))}
           </div>
 
-          {/* CTA */}
           <div className="mt-14 np-card border-t-4 border-t-brand-red p-8 sm:p-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div className="max-w-xl">
               <h3 className="text-2xl font-black text-ink tracking-tight">
@@ -1356,7 +1399,6 @@ export default function ProfessionalLandingPage() {
           }}
         />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
-          {/* Titre */}
           <div className="text-center max-w-3xl mx-auto">
             <span className="np-eyebrow">{t.computing.tag}</span>
             <h2 className="text-3xl sm:text-5xl font-black tracking-tight leading-[1.1]">
@@ -1371,7 +1413,6 @@ export default function ProfessionalLandingPage() {
             </p>
           </div>
 
-          {/* Parcours + terminal */}
           <div className="mt-14 grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-7">
               <h3 className="text-xl font-black mb-6 flex items-center gap-3">
@@ -1404,7 +1445,6 @@ export default function ProfessionalLandingPage() {
             </div>
 
             <div className="lg:col-span-5 flex flex-col gap-6">
-              {/* Terminal décoratif */}
               <div className="rounded-2xl border border-white/10 bg-black/50 overflow-hidden shadow-2xl">
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-white/[0.03]">
                   <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
@@ -1423,7 +1463,6 @@ export default function ProfessionalLandingPage() {
                 </pre>
               </div>
 
-              {/* Atout : profil ingénieur */}
               <div className="rounded-2xl border border-brand-red/40 bg-gradient-to-br from-brand-orange/10 to-brand-red/10 p-6">
                 <span className="inline-block px-3 py-1 rounded-full bg-gradient-to-r from-brand-orange to-brand-red text-white text-[10px] font-black uppercase tracking-wider">
                   {t.computing.edgeBadge}
@@ -1438,7 +1477,6 @@ export default function ProfessionalLandingPage() {
             </div>
           </div>
 
-          {/* Progression */}
           <div className="mt-16">
             <h3 className="text-center text-xl font-black mb-8 flex items-center justify-center gap-3">
               <span className="h-0.5 w-6 bg-brand-red rounded" />
@@ -1479,7 +1517,6 @@ export default function ProfessionalLandingPage() {
             </div>
           </div>
 
-          {/* Établissements */}
           <div className="mt-14 rounded-3xl border border-white/10 bg-gradient-to-r from-brand-orange/10 to-brand-red/10 p-8 sm:p-10 flex flex-col lg:flex-row gap-8 lg:items-center justify-between">
             <div className="max-w-xl">
               <span className="np-eyebrow">{t.computing.schoolTitle}</span>
@@ -1502,7 +1539,6 @@ export default function ProfessionalLandingPage() {
             </Link>
           </div>
 
-          {/* CTA final */}
           <div className="mt-12 flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="#contact" className="np-btn-primary">
               {t.computing.ctaPrimary}
@@ -1517,7 +1553,6 @@ export default function ProfessionalLandingPage() {
       {/* ========================= PROJECTS ========================= */}
       <section id="projects" className="py-20 bg-surface2">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          {/* Titre */}
           <div className="text-center max-w-3xl mx-auto">
             <span className="np-eyebrow">{t.projects.tag}</span>
             <h2 className="text-3xl sm:text-5xl font-black text-ink tracking-tight leading-[1.1]">
@@ -1529,7 +1564,6 @@ export default function ProfessionalLandingPage() {
             </p>
           </div>
 
-          {/* Projet phare : mathguidia.com */}
           <div className="mt-14 np-card border-t-4 border-t-brand-red p-6 sm:p-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
               <div className="lg:col-span-7 space-y-5">
@@ -1589,7 +1623,6 @@ export default function ProfessionalLandingPage() {
                 </a>
               </div>
 
-              {/* Aperçu décoratif de la plateforme */}
               <div className="lg:col-span-5">
                 <div className="rounded-2xl border border-line bg-surface2 p-5 space-y-3">
                   <div className="flex items-center gap-2 pb-3 border-b border-line">
@@ -1632,7 +1665,6 @@ export default function ProfessionalLandingPage() {
             </div>
           </div>
 
-          {/* Parcours en projets */}
           <div className="mt-16">
             <h3 className="text-center text-xl font-black text-ink mb-10 flex items-center justify-center gap-3">
               <span className="h-0.5 w-6 bg-brand-red rounded" />
@@ -1687,7 +1719,6 @@ export default function ProfessionalLandingPage() {
             </div>
           </div>
 
-          {/* CTA */}
           <div className="mt-14 flex flex-col sm:flex-row items-center justify-between gap-5 p-8 rounded-3xl border border-line bg-surface">
             <div>
               <h3 className="text-xl font-black text-ink">
@@ -1769,7 +1800,6 @@ export default function ProfessionalLandingPage() {
               </form>
             </div>
 
-            {/* KaTeX demo */}
             <div className="lg:col-span-6 bg-surface2 border border-line rounded-2xl p-6 sm:p-8 space-y-4">
               <div className="flex justify-between items-center text-xs text-muted font-mono pb-3 border-b border-line">
                 <span>{t.diagnostic.sampleBadge}</span>
@@ -1919,16 +1949,22 @@ export default function ProfessionalLandingPage() {
             </p>
 
             <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                alert(
-                  lang === "FR"
-                    ? "Demande transmise avec succès."
-                    : "Inquiry sent successfully.",
-                );
-              }}
+              onSubmit={handleContactSubmit}
               className="space-y-4 text-xs font-medium"
             >
+              {contactStatus.type && (
+                <div
+                  role="alert"
+                  className={`p-4 rounded-xl text-xs font-bold border transition ${
+                    contactStatus.type === "success"
+                      ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
+                      : "bg-brand-red/15 border-brand-red/30 text-brand-red"
+                  }`}
+                >
+                  {contactStatus.text}
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="np-label !text-slate-400">
@@ -1938,6 +1974,13 @@ export default function ProfessionalLandingPage() {
                     required
                     type="text"
                     placeholder="Nom complet"
+                    value={contactForm.fullName}
+                    onChange={(e) =>
+                      setContactForm((prev) => ({
+                        ...prev,
+                        fullName: e.target.value,
+                      }))
+                    }
                     className="np-input !bg-black/30 !border-white/10 !text-slate-100"
                   />
                 </div>
@@ -1949,6 +1992,13 @@ export default function ProfessionalLandingPage() {
                     required
                     type="email"
                     placeholder="email@domaine.com"
+                    value={contactForm.email}
+                    onChange={(e) =>
+                      setContactForm((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
                     className="np-input !bg-black/30 !border-white/10 !text-slate-100"
                   />
                 </div>
@@ -1958,12 +2008,23 @@ export default function ProfessionalLandingPage() {
                 <label className="np-label !text-slate-400">
                   {t.contact.natureLabel}
                 </label>
-                <select className="np-input !bg-black/30 !border-white/10 !text-slate-100">
-                  <option>{t.contact.opt1}</option>
-                  <option>{t.contact.optSchool}</option>
-                  <option>{t.contact.opt2}</option>
-                  <option>{t.contact.opt3}</option>
-                  <option>{t.contact.opt4}</option>
+                <select
+                  value={contactForm.category}
+                  onChange={(e) =>
+                    setContactForm((prev) => ({
+                      ...prev,
+                      category: e.target.value,
+                    }))
+                  }
+                  className="np-input !bg-black/30 !border-white/10 !text-slate-100"
+                >
+                  <option value={t.contact.opt1}>{t.contact.opt1}</option>
+                  <option value={t.contact.optSchool}>
+                    {t.contact.optSchool}
+                  </option>
+                  <option value={t.contact.opt2}>{t.contact.opt2}</option>
+                  <option value={t.contact.opt3}>{t.contact.opt3}</option>
+                  <option value={t.contact.opt4}>{t.contact.opt4}</option>
                 </select>
               </div>
 
@@ -1975,12 +2036,27 @@ export default function ProfessionalLandingPage() {
                   rows={4}
                   required
                   placeholder="Précisez votre demande ou vos objectifs académiques..."
+                  value={contactForm.message}
+                  onChange={(e) =>
+                    setContactForm((prev) => ({
+                      ...prev,
+                      message: e.target.value,
+                    }))
+                  }
                   className="np-input !bg-black/30 !border-white/10 !text-slate-100"
                 />
               </div>
 
-              <button type="submit" className="np-btn-blue w-full !py-4">
-                {t.contact.btnSend}
+              <button
+                type="submit"
+                disabled={contactSubmitting}
+                className="np-btn-blue w-full !py-4 disabled:opacity-50 disabled:pointer-events-none"
+              >
+                {contactSubmitting
+                  ? lang === "FR"
+                    ? "ENVOI EN COURS..."
+                    : "SENDING..."
+                  : t.contact.btnSend}
               </button>
             </form>
           </div>

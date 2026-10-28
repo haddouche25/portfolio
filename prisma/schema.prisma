@@ -160,3 +160,16 @@ model QcmAnswer {
   @@index([attemptId])
   @@index([questionId])
 }
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  fullName  String
+  email     String
+  category  String
+  message   String   @db.Text
+  status    String   @default("UNREAD") // UNREAD, READ, ARCHIVED
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([status])
+}
