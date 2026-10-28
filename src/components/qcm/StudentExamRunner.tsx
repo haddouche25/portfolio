@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import MathText from "@/components/qcm/MathText";
 import {
@@ -30,7 +30,7 @@ interface Props {
 }
 
 /**
- * Fisher-Yates shuffle algorithm for uniform randomization
+ * Algorithme Fisher-Yates
  */
 function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
@@ -41,7 +41,6 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-/* Couleur selon le résultat : rouge < 50, ambre 50-74, vert >= 75 */
 function tone(percentage: number) {
   if (percentage >= 75)
     return {
@@ -63,9 +62,12 @@ function tone(percentage: number) {
 }
 
 export default function StudentExamRunner({ examId, title, questions }: Props) {
-  // Shuffled questions state (keeps choices random per session but stable across renders)
-  const [shuffledQuestions, setShuffledQuestions] =
-    useState<Question[]>(questions);
+  const [shuffledQuestions] = useState<Question[]>(() =>
+    questions.map((q) => ({
+      ...q,
+      options: shuffleArray(q.options),
+    })),
+  );
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -85,17 +87,6 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
     percentage: number;
   } | null>(null);
 
-  // Randomize the options once upon client mount
-  useEffect(() => {
-    setShuffledQuestions(
-      questions.map((q) => ({
-        ...q,
-        options: shuffleArray(q.options),
-      })),
-    );
-  }, [questions]);
-
-  // 1. Démarrage ou Reprise via Email
   const handleStartOrResume = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
@@ -114,7 +105,6 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
       if (session.fullName) setFullName(session.fullName);
       setSelectedAnswers(session.savedAnswers);
 
-      // Reprise : se placer sur la première question sans réponse
       if (session.isResumed) {
         const firstUnansweredIndex = shuffledQuestions.findIndex(
           (q) => !session.savedAnswers[q.id],
@@ -138,7 +128,6 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
     (q) => selectedAnswers[q.id],
   ).length;
 
-  // 2. Sélection d'une réponse (enregistrée immédiatement en base)
   const handleSelectOption = async (optId: string) => {
     setSelectedAnswers((prev) => ({ ...prev, [currentQ.id]: optId }));
 
@@ -151,7 +140,6 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
     }
   };
 
-  // 3. Clic sur "Suivante"
   const handleNext = async () => {
     if (attemptId) {
       setSavingStep(true);
@@ -168,7 +156,6 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
     setCurrentIndex((prev) => prev + 1);
   };
 
-  // 4. Soumission finale
   const handleSubmit = async () => {
     if (!attemptId) return;
 
@@ -196,7 +183,6 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
     }
   };
 
-  /* ============ ÉCRAN 1 : accès / reprise ============ */
   if (!hasStarted) {
     return (
       <div className="p-6 sm:p-8 space-y-6">
@@ -268,7 +254,6 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
     );
   }
 
-  /* ============ ÉCRAN 2 : résultats ============ */
   if (result) {
     const c = tone(result.percentage);
 
@@ -312,7 +297,6 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
           </div>
         </div>
 
-        {/* Correction didactique */}
         <div className="space-y-4">
           <h2 className="text-xl font-black text-ink flex items-center gap-3">
             <span className="h-0.5 w-6 bg-brand-red rounded" />
@@ -391,14 +375,12 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
     );
   }
 
-  /* ============ ÉCRAN 3 : déroulement ============ */
   const progress = Math.round(
     ((currentIndex + 1) / shuffledQuestions.length) * 100,
   );
 
   return (
     <div className="p-5 sm:p-8 space-y-6">
-      {/* En-tête */}
       <div className="flex flex-wrap justify-between items-start gap-3 text-xs border-b border-line pb-4">
         <div className="min-w-0">
           <span className="block font-black text-ink text-sm truncate">
@@ -419,7 +401,6 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
         </div>
       </div>
 
-      {/* Barre de progression + navigateur de questions */}
       <div className="space-y-3">
         <div
           className="h-1.5 w-full rounded-full bg-surface2 border border-line overflow-hidden"
@@ -434,7 +415,6 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
           />
         </div>
 
-        {/* Indicateur visuel */}
         <div
           className="flex flex-wrap items-center gap-1.5 select-none"
           aria-hidden="true"
@@ -463,12 +443,10 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
         </div>
       </div>
 
-      {/* Question */}
       <div className="text-lg sm:text-xl font-bold text-ink leading-relaxed pt-1">
         <MathText content={currentQ.question} />
       </div>
 
-      {/* Options (shuffled randomly per session) */}
       <div className="space-y-3">
         {currentQ.options.map((opt, i) => {
           const isSelected = selectedAnswers[currentQ.id] === opt.id;
@@ -510,7 +488,6 @@ export default function StudentExamRunner({ examId, title, questions }: Props) {
         </div>
       )}
 
-      {/* Navigation */}
       <div className="flex justify-between items-center gap-3 pt-5 border-t border-line">
         <p className="text-[11px] text-muted font-medium leading-snug max-w-[14rem]">
           Épreuve linéaire : une réponse validée ne peut plus être modifiée.

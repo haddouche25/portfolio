@@ -1,15 +1,17 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
+
+const emptySubscribe = () => () => {};
 
 export default function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
 
   if (!mounted) {
     return (
@@ -28,7 +30,6 @@ export default function ThemeToggle() {
       className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-100 text-slate-700 hover:text-amber-600 border border-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:text-amber-400 dark:border-slate-800 transition"
     >
       {isDark ? (
-        // Soleil pour passer en clair
         <svg
           className="w-4 h-4"
           fill="none"
@@ -43,7 +44,6 @@ export default function ThemeToggle() {
           />
         </svg>
       ) : (
-        // Lune pour passer en sombre
         <svg
           className="w-4 h-4"
           fill="none"

@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { getStudentHistoryByEmail } from "@/lib/actions/qcm-student";
 import AttemptReviewModal from "@/components/qcm/AttemptReviewModal";
-import ThemeToggle from "@/components/theme/ThemeToggle";
 
 type StudentAttempt = {
   id: string;
@@ -20,7 +19,6 @@ type StudentAttempt = {
   completedAt: string | null;
 };
 
-/* Couleur selon le résultat : rouge < 50, ambre 50-74, vert >= 75 */
 function tone(percentage: number) {
   if (percentage >= 75)
     return {
@@ -67,7 +65,6 @@ export default function StudentHistoryPage() {
   return (
     <div className="min-h-screen bg-background text-ink font-sans antialiased selection:bg-brand-red selection:text-white">
       <main className="max-w-4xl mx-auto py-12 px-4 sm:px-6 space-y-8">
-        {/* Navigation */}
         <div className="flex items-center justify-between gap-3">
           <Link
             href="/qcm"
@@ -77,7 +74,6 @@ export default function StudentHistoryPage() {
           </Link>
         </div>
 
-        {/* En-tête */}
         <div>
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
             Mon Historique d&apos;
@@ -89,7 +85,6 @@ export default function StudentHistoryPage() {
           </p>
         </div>
 
-        {/* Recherche par email */}
         <form
           onSubmit={handleSearch}
           className="np-card p-4 sm:p-5 flex flex-col sm:flex-row gap-3 items-stretch sm:items-end"
@@ -126,7 +121,6 @@ export default function StudentHistoryPage() {
           </div>
         )}
 
-        {/* Résultats */}
         {hasSearched && (
           <section className="space-y-4">
             {studentName ? (
@@ -164,7 +158,6 @@ export default function StudentHistoryPage() {
                     key={att.id}
                     className="np-card np-card-hover p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-5"
                   >
-                    {/* Infos */}
                     <div className="space-y-2 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h2 className="text-base font-black text-ink">
@@ -209,7 +202,6 @@ export default function StudentHistoryPage() {
                         )}
                       </div>
 
-                      {/* Barre de progression / résultat */}
                       <div
                         className="h-1.5 w-full max-w-xs rounded-full bg-surface2 border border-line overflow-hidden"
                         role="progressbar"
@@ -226,7 +218,6 @@ export default function StudentHistoryPage() {
                       </div>
                     </div>
 
-                    {/* Score + actions */}
                     <div className="flex flex-wrap items-center justify-between lg:justify-end gap-3 pt-4 lg:pt-0 border-t lg:border-t-0 border-line">
                       <div className="text-right pr-2">
                         {att.isCompleted ? (
@@ -283,7 +274,6 @@ export default function StudentHistoryPage() {
         )}
       </main>
 
-      {/* Modale de correction */}
       <AttemptReviewModal
         attemptId={reviewAttemptId}
         onClose={() => setReviewAttemptId(null)}

@@ -132,9 +132,13 @@ export default function PillarClientView({
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {category.articles.map((rawArticle) => {
+                      const articleDate = new Date(rawArticle.createdAt);
+
                       const cardPayload = {
                         ...rawArticle,
-                        createdAt: new Date(rawArticle.createdAt),
+                        createdAt: articleDate,
+                        updatedAt: articleDate,
+                        published: true,
                         category: {
                           slug: category.slug,
                           titleEn: category.titleEn,

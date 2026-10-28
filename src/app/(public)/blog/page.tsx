@@ -10,6 +10,15 @@ export const metadata: Metadata = {
     "Articles didactiques en mathématiques (Lycée & 1Bac SM) et tutoriels d'ingénierie logicielle moderne.",
 };
 
+// Fonction utilitaire externe : évite l'appel direct d'une fonction impure dans le rendu du composant
+function isRecentArticle(createdAt: Date, maxDays = 14): boolean {
+  const diffTime = Math.abs(
+    new Date().getTime() - new Date(createdAt).getTime(),
+  );
+  const diffDays = diffTime / (1000 * 60 * 60 * 24);
+  return diffDays < maxDays;
+}
+
 export default async function BlogHubPage() {
   const [articles, categories] = await Promise.all([
     prisma.article.findMany({
@@ -37,8 +46,7 @@ export default async function BlogHubPage() {
     pillarSlug: a.category.pillar.slug,
     categorySlug: a.category.slug,
     createdAt: a.createdAt.toISOString(),
-    isNew:
-      Date.now() - new Date(a.createdAt).getTime() < 14 * 24 * 60 * 60 * 1000,
+    isNew: isRecentArticle(a.createdAt),
     isFeatured: a.slug.includes("contraposee"),
   }));
 
@@ -51,8 +59,7 @@ export default async function BlogHubPage() {
     pillarSlug: a.category.pillar.slug,
     categorySlug: a.category.slug,
     createdAt: a.createdAt.toISOString(),
-    isNew:
-      Date.now() - new Date(a.createdAt).getTime() < 14 * 24 * 60 * 60 * 1000,
+    isNew: isRecentArticle(a.createdAt),
     isFeatured: a.slug.includes("contraposee"),
   }));
 

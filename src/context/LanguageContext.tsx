@@ -4,7 +4,6 @@ import React, {
   createContext,
   useContext,
   useState,
-  useEffect,
   type ReactNode,
 } from "react";
 
@@ -21,18 +20,19 @@ const LanguageContext = createContext<LanguageContextType>({
 });
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Language>("FR");
-
-  useEffect(() => {
-    const saved = localStorage.getItem("preferred_lang") as Language | null;
-    if (saved === "FR" || saved === "EN") {
-      setLangState(saved);
+  const [lang, setLangState] = useState<Language>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("preferred_lang") as Language | null;
+      if (saved === "FR" || saved === "EN") return saved;
     }
-  }, []);
+    return "FR";
+  });
 
   const setLang = (newLang: Language) => {
     setLangState(newLang);
-    localStorage.setItem("preferred_lang", newLang);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("preferred_lang", newLang);
+    }
   };
 
   return (

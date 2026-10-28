@@ -1,7 +1,9 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+
 interface SubmissionData {
+  examId?: string;
   fullName: string;
   email: string;
   answers: {
@@ -11,7 +13,7 @@ interface SubmissionData {
 }
 
 export async function submitQcmAttempt(data: SubmissionData) {
-  const { fullName, email, answers } = data;
+  const { examId, fullName, email, answers } = data;
 
   if (!fullName?.trim() || !email?.trim() || !answers || answers.length === 0) {
     throw new Error("Informations d'inscription ou réponses incomplètes.");
@@ -20,7 +22,7 @@ export async function submitQcmAttempt(data: SubmissionData) {
   const cleanEmail = email.trim().toLowerCase();
   const cleanName = fullName.trim();
 
-  // 1. Get or create the student
+  // 1. Obtenir ou créer l'élève
   const student = await prisma.student.upsert({
     where: { email: cleanEmail },
     update: { fullName: cleanName },
@@ -30,14 +32,14 @@ export async function submitQcmAttempt(data: SubmissionData) {
     },
   });
 
-  // 2. Fetch all questions and their correct options
+  // 2. Récupérer toutes les questions et leurs options
   const questionIds = answers.map((a) => a.questionId);
   const questions = await prisma.qcmQuestion.findMany({
     where: { id: { in: questionIds } },
     include: { options: true },
   });
 
-  // 3. Grade answers on the server side
+  // 3. Noter les réponses côté serveur
   let score = 0;
   const gradedAnswers = answers.map((userAns) => {
     const q = questions.find((item) => item.id === userAns.questionId);
@@ -56,11 +58,23 @@ export async function submitQcmAttempt(data: SubmissionData) {
   });
 
   const totalQuestions = questions.length;
-  const percentage = Math.round((score / totalQuestions) * 1000) / 10; // e.g. 85.5%
+  const percentage =
+    totalQuestions > 0 ? Math.round((score / totalQuestions) * 1000) / 10 : 0;
 
-  // 4. Save attempt and detailed answers
+  // 4. Déterminer un examId valide non nul
+  let resolvedExamId = examId;
+  if (!resolvedExamId) {
+    const fallbackExam = await prisma.qcmExam.findFirst();
+    if (!fallbackExam) {
+      throw new Error("Aucun examen actif n'a été trouvé en base de données.");
+    }
+    resolvedExamId = fallbackExam.id;
+  }
+
+  // 5. Enregistrer la tentative
   const attempt = await prisma.qcmAttempt.create({
     data: {
+      examId: resolvedExamId,
       studentId: student.id,
       score,
       totalQuestions,
