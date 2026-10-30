@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -9,10 +11,9 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-export default async function StudentExamPage({ params }: Props) {
-  const { slug } = await params;
-
-  const exam = await prisma.qcmExam.findUnique({
+// Cache de la requête pour l'utiliser à la fois dans generateMetadata et la page
+const getExam = cache(async (slug: string) => {
+  return prisma.qcmExam.findUnique({
     where: { slug, published: true },
     include: {
       questions: {
@@ -27,6 +28,45 @@ export default async function StudentExamPage({ params }: Props) {
       },
     },
   });
+});
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const exam = await getExam(slug);
+
+  if (!exam) {
+    return {
+      title: "Évaluation non trouvée | Mohamed Haddouche",
+    };
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mhaddouche.com";
+  const title = `${exam.title} | Évaluation QCM`;
+  const description =
+    exam.description ||
+    `Testez vos compétences avec cette évaluation de ${exam.questions.length} questions. Correction détaillée incluse.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${siteUrl}/qcm/${slug}`,
+      type: "website",
+      locale: "fr_FR",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
+
+export default async function StudentExamPage({ params }: Props) {
+  const { slug } = await params;
+  const exam = await getExam(slug);
 
   if (!exam) return notFound();
 

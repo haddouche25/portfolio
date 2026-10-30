@@ -15,9 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mohamed Haddouche | Math Coach & Software Engineer",
+  metadataBase: new URL("https://mhaddouche.com"),
+  title: {
+    default: "Mohamed Haddouche | Math Coach & Software Engineer",
+    template: "%s | Mohamed Haddouche",
+  },
   description:
-    "Portfolio professionnel et plateforme d'apprentissage didactique. Accompagnement mathématique d'excellence (Lycée & Prépa) et ingénierie logicielle full-stack moderne.",
+    "Coaching en mathématiques (Lycée, 1Bac SM) et ingénierie logicielle : cours, QCM interactifs et tutoriels.",
   keywords: [
     "Math Coach",
     "Software Engineer",
@@ -27,6 +31,21 @@ export const metadata: Metadata = {
     "1Bac SM",
     "QCM Didactique",
   ],
+  openGraph: {
+    type: "website",
+    siteName: "Mohamed Haddouche",
+    locale: "fr_FR",
+    url: "/",
+    title: "Mohamed Haddouche | Math Coach & Software Engineer",
+    description:
+      "Coaching en mathématiques (Lycée, 1Bac SM) et ingénierie logicielle : cours, QCM interactifs et tutoriels.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Mohamed Haddouche | Math Coach & Software Engineer",
+    description:
+      "Coaching en mathématiques (Lycée, 1Bac SM) et ingénierie logicielle : cours, QCM interactifs et tutoriels.",
+  },
 };
 
 export default function RootLayout({
