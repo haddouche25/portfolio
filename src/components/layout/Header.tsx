@@ -55,7 +55,7 @@ export default function Header({ lang, onLanguageChange }: HeaderProps) {
     { href: "/#projects", label: t.nav.projects },
     { href: "/#certs", label: t.nav.certs },
     { href: "/#parcours", label: t.nav.cv },
-    { href: "/articles", label: t.nav.blog },
+    { href: "/blog", label: t.nav.blog },
     { href: "/#contact", label: t.nav.contact },
   ];
 

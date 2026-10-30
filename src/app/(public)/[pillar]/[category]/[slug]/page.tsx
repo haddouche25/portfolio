@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import {
@@ -8,37 +9,67 @@ import {
 } from "@/types/content";
 import ArticleClientView from "@/components/article/ArticleClientView";
 
+/**
+ * Cached fetcher shared between generateMetadata and ArticlePage.
+ * React cache ensures the DB query only executes once per request.
+ */
+const getArticle = cache(
+  async (pillar: string, category: string, slug: string) => {
+    return prisma.article.findFirst({
+      where: {
+        slug,
+        published: true,
+        category: {
+          slug: category,
+          pillar: { slug: pillar },
+        },
+      },
+      ...articleWithRelationsArgs,
+    });
+  },
+);
+
 export async function generateMetadata({
   params,
-}: ArticlePageProps): Promise<Metadata> {
+}: {
+  params: Promise<{ pillar: string; category: string; slug: string }>;
+}): Promise<Metadata> {
   const { pillar, category, slug } = await params;
+  const article = await getArticle(pillar, category, slug);
 
-  const rawArticle = await prisma.article.findFirst({
-    where: {
-      slug,
-      published: true,
-      category: {
-        slug: category,
-        pillar: { slug: pillar },
-      },
-    },
-    ...articleWithRelationsArgs,
-  });
-
-  if (!rawArticle) {
-    return { title: "Article Not Found" };
+  if (!article) {
+    return {
+      title: "Article non trouvé | Mohamed Haddouche",
+    };
   }
 
-  const article = localizeArticle(rawArticle, "fr");
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com";
+
+  // Build the dynamic image URL
+  const ogImageUrl = new URL(`${siteUrl}/api/og`);
+  ogImageUrl.searchParams.set("title", article.titleFr);
+  ogImageUrl.searchParams.set("category", article.category.titleFr);
 
   return {
-    title: `${article.title} | ${article.category.title}`,
-    description: article.excerpt ?? undefined,
+    title: `${article.titleFr} | Mohamed Haddouche`,
+    description: article.excerptFr ?? undefined,
     openGraph: {
-      title: article.title,
-      description: article.excerpt ?? undefined,
-      type: "article",
-      publishedTime: article.createdAt.toISOString(),
+      title: article.titleFr,
+      description: article.excerptFr ?? undefined,
+      images: [
+        {
+          url: ogImageUrl.toString(),
+          width: 1200,
+          height: 630,
+          alt: article.titleFr,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.titleFr,
+      description: article.excerptFr ?? undefined,
+      images: [ogImageUrl.toString()],
     },
   };
 }
@@ -46,17 +77,7 @@ export async function generateMetadata({
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { pillar, category, slug } = await params;
 
-  const rawArticle = await prisma.article.findFirst({
-    where: {
-      slug,
-      published: true,
-      category: {
-        slug: category,
-        pillar: { slug: pillar },
-      },
-    },
-    ...articleWithRelationsArgs,
-  });
+  const rawArticle = await getArticle(pillar, category, slug);
 
   if (!rawArticle) {
     notFound();
