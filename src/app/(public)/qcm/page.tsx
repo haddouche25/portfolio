@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { SchoolLevel } from "@prisma/client";
-
+import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 // On utilise les vraies clés de l'enum SchoolLevel de Prisma
@@ -24,18 +24,62 @@ const LEVEL_LABELS: Record<SchoolLevel, string> = {
   BAC2_S: "2bac S",
 };
 
+function parseLevel(level?: string): SchoolLevel | undefined {
+  return level && Object.values(SchoolLevel).includes(level as SchoolLevel)
+    ? (level as SchoolLevel)
+    : undefined;
+}
+
 interface Props {
   searchParams: Promise<{ level?: string }>;
+}
+
+export async function generateMetadata({
+  searchParams,
+}: Props): Promise<Metadata> {
+  const { level } = await searchParams;
+  const selected = parseLevel(level);
+  const label = selected ? LEVEL_LABELS[selected] : null;
+
+  const title = label
+    ? `QCM de maths ${label} : tests et corrections détaillées`
+    : "QCM de maths en ligne : tests par niveau et corrections";
+
+  const description = label
+    ? `Tests QCM de mathématiques niveau ${label} : entraînement, bilans d'acquis et épreuves chronométrées avec correction détaillée pas à pas.`
+    : "Tests QCM de mathématiques du collège au lycée (3AC, Tronc commun, 1Bac, 2Bac) : entraînement, bilans d'acquis et corrections détaillées.";
+
+  const url = selected ? `/qcm?level=${selected}` : "/qcm";
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "website",
+      locale: "fr_FR",
+      siteName: "Mohamed Haddouche",
+      url,
+      title,
+      description,
+      images: [
+        { url: "/og-default.jpg", width: 1200, height: 630, alt: title },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["/og-default.jpg"],
+    },
+  };
 }
 
 export default async function StudentQcmCatalogPage({ searchParams }: Props) {
   const { level } = await searchParams;
 
   // Validation stricte : on vérifie que la valeur reçue existe bien dans l'enum Prisma SchoolLevel
-  const selectedLevel =
-    level && Object.values(SchoolLevel).includes(level as SchoolLevel)
-      ? (level as SchoolLevel)
-      : undefined;
+  const selectedLevel = parseLevel(level);
 
   const exams = await prisma.qcmExam.findMany({
     where: {
