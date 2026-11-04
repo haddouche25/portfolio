@@ -2,105 +2,224 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { SchoolLevel } from "@prisma/client";
 import type { Metadata } from "next";
+
 export const dynamic = "force-dynamic";
 
-// On utilise les vraies clés de l'enum SchoolLevel de Prisma
-const LEVELS: { key: SchoolLevel | "ALL"; label: string }[] = [
-  { key: "ALL", label: "Tous les niveaux" },
-  { key: SchoolLevel.TRONC_COMMUN, label: "Tronc commun" },
-  { key: SchoolLevel.BAC1_SM, label: "1bac SM" },
-  { key: SchoolLevel.BAC1_S, label: "1bac S" },
-  { key: SchoolLevel.BAC2_SM, label: "2bac SM" },
-  { key: SchoolLevel.BAC2_S, label: "2bac S" },
-  { key: SchoolLevel.COLLEGE_3AC, label: "3AC" },
-];
-
-const LEVEL_LABELS: Record<SchoolLevel, string> = {
-  COLLEGE_3AC: "3AC",
-  TRONC_COMMUN: "Tronc commun",
-  BAC1_SM: "1bac SM",
-  BAC1_S: "1bac S",
-  BAC2_SM: "2bac SM",
-  BAC2_S: "2bac S",
+// ---------------------------------------------------------------------------
+// 1. CONFIGURATION DES 4 NIVEAUX OFFICIELS
+// ---------------------------------------------------------------------------
+type LevelConfig = {
+  key: SchoolLevel;
+  label: string;
+  seoName: string;
+  aliases: string[];
 };
 
-function parseLevel(level?: string): SchoolLevel | undefined {
-  return level && Object.values(SchoolLevel).includes(level as SchoolLevel)
-    ? (level as SchoolLevel)
-    : undefined;
+const LEVELS: LevelConfig[] = [
+  {
+    key: SchoolLevel.COLLEGE_3AC,
+    label: "3AC",
+    seoName: "3ème Année Collège (3AC)",
+    aliases: ["3AC", "COLLEGE_3AC", "3ac"],
+  },
+  {
+    key: SchoolLevel.TRONC_COMMUN,
+    label: "Tronc commun",
+    seoName: "Tronc Commun Scientifique",
+    aliases: ["TRONC_COMMUN", "tc", "tronc-commun"],
+  },
+  {
+    key: SchoolLevel.BAC_1,
+    label: "1Bac",
+    seoName: "1ère Année Baccalauréat (1Bac Sciences & SM)",
+    aliases: [
+      "BAC_1",
+      "BAC1",
+      "BAC1_SM",
+      "BAC1_S",
+      "1bac",
+      "1bac-sm",
+      "1bac-s",
+      "1Bac",
+    ],
+  },
+  {
+    key: SchoolLevel.BAC_2,
+    label: "2Bac",
+    seoName: "2ème Année Baccalauréat (2Bac Sciences & SM)",
+    aliases: [
+      "BAC_2",
+      "BAC2",
+      "BAC2_SM",
+      "BAC2_S",
+      "2bac",
+      "2bac-sm",
+      "2bac-s",
+      "2Bac",
+    ],
+  },
+];
+
+function resolveLevel(param?: string): LevelConfig | undefined {
+  if (!param) return undefined;
+  const normalized = param.trim();
+  return LEVELS.find(
+    (l) => l.key === normalized || l.aliases.includes(normalized),
+  );
+}
+
+function levelLabel(level: SchoolLevel): string {
+  return LEVELS.find((l) => l.key === level)?.label ?? level;
+}
+
+function examsWord(n: number): string {
+  return n > 1 ? "examens" : "examen";
 }
 
 interface Props {
   searchParams: Promise<{ level?: string }>;
 }
 
+// ---------------------------------------------------------------------------
+// 2. SEO & METADATA DYNAMIQUES
+// ---------------------------------------------------------------------------
 export async function generateMetadata({
   searchParams,
 }: Props): Promise<Metadata> {
   const { level } = await searchParams;
-  const selected = parseLevel(level);
-  const label = selected ? LEVEL_LABELS[selected] : null;
+  const current = resolveLevel(level);
 
-  const title = label
-    ? `QCM de maths ${label} : tests et corrections détaillées`
-    : "QCM de maths en ligne : tests par niveau et corrections";
+  const title = current
+    ? `QCM Maths ${current.label} (${current.seoName}) : Évaluations & Corrections`
+    : "QCM de Mathématiques en Ligne : Tests par Niveau (3AC, TC, 1Bac, 2Bac)";
 
-  const description = label
-    ? `Tests QCM de mathématiques niveau ${label} : entraînement, bilans d'acquis et épreuves chronométrées avec correction détaillée pas à pas.`
-    : "Tests QCM de mathématiques du collège au lycée (3AC, Tronc commun, 1Bac, 2Bac) : entraînement, bilans d'acquis et corrections détaillées.";
+  const description = current
+    ? `Tests QCM interactifs de mathématiques pour le niveau ${current.seoName} : exercices chronométrés, diagnostic des acquis et corrections détaillées étape par étape.`
+    : "Plateforme didactique de QCM de mathématiques pour le collège et lycée au Maroc (3AC, Tronc Commun, 1Bac, 2Bac). Entraînement et bilans corrigés pas à pas.";
 
-  const url = selected ? `/qcm?level=${selected}` : "/qcm";
+  const keywords = current
+    ? [
+        `QCM maths ${current.label}`,
+        `QCM mathématiques ${current.seoName}`,
+        `exercices corrigés ${current.label}`,
+        `contrôles mathématiques ${current.label}`,
+        "didactique maths maroc",
+      ]
+    : [
+        "QCM maths",
+        "QCM 3AC",
+        "QCM Tronc Commun",
+        "QCM 1Bac SM",
+        "QCM 2Bac",
+        "mathématiques lycée maroc",
+        "exercices corrigés mathématiques",
+      ];
+
+  const canonicalPath = current ? `/qcm?level=${current.key}` : "/qcm";
+  const ogImageUrl = "/og/qcm.jpg";
 
   return {
     title,
     description,
-    alternates: { canonical: url },
+    keywords,
+    alternates: { canonical: canonicalPath },
     openGraph: {
       type: "website",
       locale: "fr_FR",
-      siteName: "Mohamed Haddouche",
-      url,
+      siteName: "Mohamed Haddouche - Plateforme Didactique",
+      url: canonicalPath,
       title,
       description,
       images: [
-        { url: "/og-default.jpg", width: 1200, height: 630, alt: title },
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
       ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: ["/og-default.jpg"],
+      images: [ogImageUrl],
     },
   };
 }
 
+// ---------------------------------------------------------------------------
+// 3. PAGE COMPOSANT PRINCIPAL
+// ---------------------------------------------------------------------------
 export default async function StudentQcmCatalogPage({ searchParams }: Props) {
   const { level } = await searchParams;
+  const selectedLevel = resolveLevel(level);
 
-  // Validation stricte : on vérifie que la valeur reçue existe bien dans l'enum Prisma SchoolLevel
-  const selectedLevel = parseLevel(level);
-
-  const exams = await prisma.qcmExam.findMany({
-    where: {
-      published: true,
-      ...(selectedLevel ? { level: selectedLevel } : {}),
-    },
-    include: {
-      _count: {
-        select: { questions: true },
+  const [exams, levelCounts, totalExamsCount] = await Promise.all([
+    prisma.qcmExam.findMany({
+      where: {
+        published: true,
+        ...(selectedLevel
+          ? {
+              levels: {
+                some: {
+                  level: selectedLevel.key,
+                },
+              },
+            }
+          : {}),
       },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+      include: {
+        levels: {
+          select: { level: true },
+          orderBy: { level: "asc" },
+        },
+        _count: {
+          select: { questions: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+
+    // Compteurs par niveau via la table de liaison
+    prisma.qcmExamLevel.groupBy({
+      by: ["level"],
+      where: {
+        exam: {
+          published: true,
+        },
+      },
+      _count: {
+        examId: true,
+      },
+    }),
+
+    // Nombre total d'examens uniques publiés
+    prisma.qcmExam.count({
+      where: { published: true },
+    }),
+  ]);
+
+  const countMap = new Map<SchoolLevel, number>(
+    levelCounts.map((item) => [item.level, item._count.examId]),
+  );
+
+  const pills = [
+    { key: "ALL", label: "Tous les niveaux", count: totalExamsCount },
+    ...LEVELS.map((lvl) => ({
+      key: lvl.key,
+      label: lvl.label,
+      count: countMap.get(lvl.key) ?? 0,
+    })),
+  ];
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0f1115] text-slate-900 dark:text-slate-100 py-16 px-4 sm:px-6 lg:px-8 transition-colors duration-200 font-sans">
       <div className="max-w-7xl mx-auto space-y-12">
         {/* ========================================================= */}
-        {/* 1. EN-TÊTE : TITRE, HIGHLIGHT & HISTORIQUE                */}
+        {/* EN-TÊTE : TITRE, COMPTEUR D'EXAMENS & HISTORIQUE         */}
         {/* ========================================================= */}
-        <div className="text-center space-y-4 max-w-3xl mx-auto">
+        <div className="text-center space-y-5 max-w-3xl mx-auto">
           <div className="inline-block px-3.5 py-1 rounded-full bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800/60 text-[#f25c27] font-bold text-xs uppercase tracking-wider">
             Plateforme Didactique &amp; Tests Diagnostiques
           </div>
@@ -115,26 +234,54 @@ export default async function StudentQcmCatalogPage({ searchParams }: Props) {
             chronométrées avec correction détaillée.
           </p>
 
-          <div className="pt-2 flex justify-center">
+          {/* Compteur global */}
+          <div className="flex justify-center">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-[#1a1b1e] border border-slate-200 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-200 np-card-shadow">
+              <span aria-hidden="true">📚</span>
+              <span>
+                <strong className="text-[#f25c27] font-black">
+                  {totalExamsCount}
+                </strong>{" "}
+                {examsWord(totalExamsCount)} disponible
+                {totalExamsCount > 1 ? "s" : ""}
+              </span>
+            </span>
+          </div>
+
+          {/* Bouton Historique */}
+          <div className="pt-1 flex justify-center">
             <Link
               href="/qcm/historique"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-white dark:bg-[#1a1b1e] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:border-[#f25c27] hover:text-[#f25c27] dark:hover:border-[#f25c27] dark:hover:text-[#f25c27] transition-all np-card-shadow group"
+              className="group inline-flex items-center gap-3 pl-3 pr-6 py-3 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black shadow-lg shadow-slate-900/20 dark:shadow-black/30 ring-2 ring-slate-900/10 dark:ring-white/20 hover:-translate-y-0.5 hover:shadow-xl transition-all duration-150"
             >
-              <svg
-                className="w-4 h-4 text-[#f25c27] group-hover:scale-110 transition-transform"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-                stroke="currentColor"
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f25c27] text-white">
+                <svg
+                  className="w-5 h-5 group-hover:scale-110 transition-transform"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2.2"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                  />
+                </svg>
+              </span>
+              <span className="text-left leading-tight">
+                <span className="block text-sm uppercase tracking-wider">
+                  Mon historique
+                </span>
+                <span className="block text-[11px] font-semibold opacity-70">
+                  Résultats &amp; sessions en cours
+                </span>
+              </span>
+              <span
+                className="ml-1 text-lg group-hover:translate-x-1 transition-transform"
+                aria-hidden="true"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                />
-              </svg>
-              <span>Mon historique &amp; sessions en cours</span>
-              <span className="text-slate-400 group-hover:text-[#f25c27] transition-colors">
                 &rarr;
               </span>
             </Link>
@@ -142,32 +289,52 @@ export default async function StudentQcmCatalogPage({ searchParams }: Props) {
         </div>
 
         {/* ========================================================= */}
-        {/* 2. FILTRES DE NIVEAU (Enum Prisma dans l'URL)             */}
+        {/* FILTRES : 4 NIVEAUX + TOUS                                */}
         {/* ========================================================= */}
         <div className="flex flex-wrap items-center justify-center gap-2.5">
-          {LEVELS.map((lvl) => {
+          {pills.map((pill) => {
             const isActive =
-              lvl.key === "ALL" ? !selectedLevel : selectedLevel === lvl.key;
-            const href = lvl.key === "ALL" ? "/qcm" : `/qcm?level=${lvl.key}`;
+              pill.key === "ALL"
+                ? !selectedLevel
+                : selectedLevel?.key === pill.key;
+            const href = pill.key === "ALL" ? "/qcm" : `/qcm?level=${pill.key}`;
 
             return (
               <Link
-                key={lvl.key}
+                key={pill.key}
                 href={href}
-                className={`px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-150 ${
+                aria-current={isActive ? "page" : undefined}
+                className={`inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-150 ${
                   isActive
                     ? "bg-[#f25c27] text-white shadow-md shadow-orange-500/20"
                     : "bg-white dark:bg-[#1a1b1e] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-[#f25c27] hover:text-[#f25c27] np-card-shadow"
                 }`}
               >
-                {lvl.label}
+                <span>{pill.label}</span>
+                <span
+                  className={`inline-flex min-w-[1.25rem] justify-center rounded-full px-1.5 py-0.5 text-[10px] font-black ${
+                    isActive
+                      ? "bg-white/25 text-white"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                  }`}
+                >
+                  {pill.count}
+                </span>
               </Link>
             );
           })}
         </div>
 
+        {/* Résultat du filtre */}
+        <p className="text-center text-xs font-semibold text-slate-500 dark:text-slate-400 -mt-6">
+          {exams.length} {examsWord(exams.length)}
+          {selectedLevel
+            ? ` pour le niveau ${selectedLevel.label}`
+            : " au total"}
+        </p>
+
         {/* ========================================================= */}
-        {/* 3. GRILLE DES EXAMENS                                     */}
+        {/* GRILLE DES CARTES D'EXAMENS                               */}
         {/* ========================================================= */}
         {exams.length === 0 ? (
           <div className="p-16 text-center bg-white dark:bg-[#1a1b1e] border border-slate-200 dark:border-slate-800 rounded-3xl np-card-shadow text-slate-500 dark:text-slate-400">
@@ -187,11 +354,27 @@ export default async function StudentQcmCatalogPage({ searchParams }: Props) {
                 className="bg-white dark:bg-[#1a1b1e] border border-slate-200 dark:border-slate-800 rounded-2xl p-7 flex flex-col justify-between hover:-translate-y-1 transition-all duration-200 np-card-shadow group"
               >
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/60 text-[#f25c27]">
-                      {LEVEL_LABELS[exam.level as SchoolLevel] || exam.level}
-                    </span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 font-mono font-medium flex items-center gap-1">
+                  <div className="flex justify-between items-start gap-2">
+                    {/* Badges des niveaux associés */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {exam.levels.length > 0 ? (
+                        exam.levels.map((lvl) => (
+                          <span
+                            key={lvl.level}
+                            className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/60 text-[#f25c27]"
+                          >
+                            {levelLabel(lvl.level)}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-500">
+                          Général
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Durée */}
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-mono font-medium flex items-center gap-1 shrink-0 mt-0.5">
                       ⏱{" "}
                       {exam.timeLimitMinutes
                         ? `${exam.timeLimitMinutes} min`
@@ -199,16 +382,19 @@ export default async function StudentQcmCatalogPage({ searchParams }: Props) {
                     </span>
                   </div>
 
+                  {/* Titre */}
                   <h2 className="text-lg font-black text-slate-900 dark:text-white leading-snug group-hover:text-[#f25c27] transition-colors">
                     {exam.title}
                   </h2>
 
+                  {/* Description */}
                   <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-3 leading-relaxed">
                     {exam.description ||
                       "Évaluation didactique ciblée avec corrections et démonstrations pas à pas."}
                   </p>
                 </div>
 
+                {/* Bas de carte : Nombre de questions & action */}
                 <div className="pt-6 mt-6 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
                   <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                     <strong className="text-slate-900 dark:text-slate-100 font-black">

@@ -63,7 +63,7 @@ export async function getOrCreateExamSession(data: InitAttemptInput) {
       totalQuestions: data.totalQuestions,
       percentage: 0,
       startedAt: new Date(),
-      completedAt: null, // <-- Forcé explicitement à null
+      completedAt: null,
     },
   });
 
@@ -137,6 +137,7 @@ export async function saveQuestionAnswer(data: {
     },
   });
 }
+
 // 3. Clôture de l'épreuve à la validation finale
 export async function finalizeExamAttempt(attemptId: string) {
   const attempt = await prisma.qcmAttempt.findUnique({
@@ -172,7 +173,13 @@ export async function getStudentHistoryByEmail(email: string) {
       include: {
         attempts: {
           include: {
-            exam: true,
+            exam: {
+              include: {
+                levels: {
+                  select: { level: true },
+                },
+              },
+            },
             answers: true,
           },
           orderBy: {
@@ -197,17 +204,19 @@ export async function getStudentHistoryByEmail(email: string) {
           ? Math.round((score / attempt.totalQuestions) * 100)
           : 0;
 
+      const levelsList = attempt.exam?.levels.map((l) => l.level) ?? [];
+
       return {
         id: attempt.id,
         examTitle: attempt.exam?.title ?? "Examen",
         examSlug: attempt.exam?.slug ?? "",
-        level: attempt.exam?.level ?? "",
+        level: levelsList.join(", "),
+        levels: levelsList,
         isCompleted,
         score,
         totalQuestions: attempt.totalQuestions,
         percentage,
         answeredCount: attempt.answers.length,
-        // Convertir impérativement en string pour la sérialisation Next.js RSC
         startedAt: attempt.startedAt.toISOString(),
         completedAt: attempt.completedAt
           ? attempt.completedAt.toISOString()

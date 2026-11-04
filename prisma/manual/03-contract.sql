@@ -1,0 +1,1 @@
+ALTER TABLE `qcmexam` DROP COLUMN `level`;

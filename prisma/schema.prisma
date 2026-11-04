@@ -51,29 +51,39 @@ model Article {
 }
 
 enum SchoolLevel {
-  COLLEGE_3AC      @map("3AC")
-  TRONC_COMMUN     @map("Tronc commun")
-  BAC1_SM          @map("1bac SM")
-  BAC1_S           @map("1bac S")
-  BAC2_SM          @map("2bac SM")
-  BAC2_S           @map("2bac S")
+  COLLEGE_3AC   @map("3ac")
+  TRONC_COMMUN  @map("tronc commun")
+  BAC_1         @map("1bac")
+  BAC_2         @map("2bac")
 }
 
 model QcmExam {
   id               String            @id @default(cuid())
-  title            String
   slug             String            @unique
+  title            String
   description      String?           @db.Text
-  level            SchoolLevel       @default(BAC1_SM)
   timeLimitMinutes Int?
   published        Boolean           @default(false)
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
+  levels           QcmExamLevel[]
   questions        QcmExamQuestion[]
   attempts         QcmAttempt[]
 
+  @@map("qcmexam")
+}
+
+model QcmExamLevel {
+  id      String      @id @default(cuid())
+  examId  String
+  level   SchoolLevel
+
+  exam    QcmExam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, level])
   @@index([level])
+  @@map("qcm_exam_levels")
 }
 
 model QcmExamQuestion {
@@ -135,7 +145,7 @@ model QcmAttempt {
   totalQuestions Int
   percentage     Float
   startedAt      DateTime    @default(now())
-  completedAt    DateTime?   
+  completedAt    DateTime?
 
   exam           QcmExam     @relation(fields: [examId], references: [id], onDelete: Cascade)
   student        Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
