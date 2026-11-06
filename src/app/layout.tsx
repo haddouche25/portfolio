@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import "katex/dist/katex.min.css";
@@ -13,6 +13,17 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+// Configuration du viewport et de la couleur de thème pour la barre système mobile
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f97316" },
+    { media: "(prefers-color-scheme: dark)", color: "#020617" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://mhaddouche.com"),
@@ -31,6 +42,17 @@ export const metadata: Metadata = {
     "1Bac SM",
     "QCM Didactique",
   ],
+  // Déclaration explicite du manifest PWA
+  manifest: "/manifest.webmanifest",
+  // Optimisation iOS / Safari
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "MHaddouche",
+  },
+  formatDetection: {
+    telephone: false,
+  },
   openGraph: {
     type: "website",
     siteName: "Mohamed Haddouche",

@@ -1,10 +1,13 @@
 import { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
 
+// Forcer Next.js à régénérer le sitemap à la demande avec la base de données active
+export const dynamic = "force-dynamic";
+export const revalidate = 3600; // Rafraîchissement automatique toutes les heures
+
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://mhaddouche.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // 1. Pages statiques publiques
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: `${BASE_URL}`,
@@ -32,7 +35,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // 2. Récupération dynamique des QCM actifs
   let qcmRoutes: MetadataRoute.Sitemap = [];
   try {
     const exams = await prisma.qcmExam.findMany({
@@ -52,7 +54,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Erreur génération sitemap QCM:", error);
   }
 
-  // 3. Récupération dynamique des articles de blog publiés
   let blogRoutes: MetadataRoute.Sitemap = [];
   try {
     const articles = await prisma.article.findMany({
