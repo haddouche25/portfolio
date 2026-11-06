@@ -50,3 +50,5 @@ Thumbs.db
 .claude/
 .cursor/
 .devin/
+*.zip
+old.prisma
