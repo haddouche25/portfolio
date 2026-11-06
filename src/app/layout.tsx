@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import "katex/dist/katex.min.css";
 import "./globals.css";
+import RegisterSW from "@/components/pwa/RegisterSW";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -95,6 +96,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <RegisterSW />
           {children}
         </ThemeProvider>
       </body>
