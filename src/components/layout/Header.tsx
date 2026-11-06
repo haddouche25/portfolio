@@ -18,6 +18,7 @@ export default function Header({ lang, onLanguageChange }: HeaderProps) {
         "Coach en mathématiques & Ingénieur logiciel · Penser juste, coder propre",
       talkCta: "RÉSERVER UN APPEL",
       consultation: "PRENDRE RDV",
+      studentLogin: "ESPACE ÉLÈVE",
       nav: {
         coaching: "Math Coaching",
         qcm: "Moteur QCM",
@@ -33,6 +34,7 @@ export default function Header({ lang, onLanguageChange }: HeaderProps) {
       alert: "Math Coach & Software Engineer · Think sharp, code clean",
       talkCta: "LET'S TALK",
       consultation: "BOOK A CALL",
+      studentLogin: "STUDENT PORTAL",
       nav: {
         coaching: "Math Coaching",
         qcm: "MCQ Engine",
@@ -46,8 +48,7 @@ export default function Header({ lang, onLanguageChange }: HeaderProps) {
     },
   }[lang];
 
-  // Les ancres pointent maintenant vers de vraies sections de la page d'accueil :
-  // #coaching, #computing, #projects (plateforme QCM), #certs, #parcours, #contact
+  // Les ancres pointent vers les sections de la page d'accueil ou les pages dédiées
   const links = [
     { href: "/#coaching", label: t.nav.coaching },
     { href: "/qcm", label: t.nav.qcm },
@@ -114,7 +115,7 @@ export default function Header({ lang, onLanguageChange }: HeaderProps) {
             </div>
           </Link>
 
-          <nav className="hidden xl:flex items-center gap-7 text-[13px] font-extrabold text-ink">
+          <nav className="hidden xl:flex items-center gap-6 text-[13px] font-extrabold text-ink">
             {links.map((l) => (
               <Link
                 key={l.label}
@@ -126,10 +127,32 @@ export default function Header({ lang, onLanguageChange }: HeaderProps) {
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Bouton Espace Élève */}
+            <Link
+              href="/connexion"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-surface2 hover:bg-brand-orange/10 text-ink hover:text-brand-orange border border-line text-xs font-black uppercase tracking-wider transition"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+              <span>{t.studentLogin}</span>
+            </Link>
+
+            {/* Bouton Prendre RDV */}
             <Link
               href="/#contact"
-              className="px-5 py-2.5 rounded-lg border-2 border-ink text-ink hover:bg-brand-red hover:border-brand-red hover:text-white text-xs font-black uppercase tracking-wider transition-all"
+              className="hidden sm:inline-block px-4 py-2 rounded-lg border-2 border-ink text-ink hover:bg-brand-red hover:border-brand-red hover:text-white text-xs font-black uppercase tracking-wider transition-all"
             >
               {t.consultation}
             </Link>
@@ -163,6 +186,7 @@ export default function Header({ lang, onLanguageChange }: HeaderProps) {
         </div>
       </div>
 
+      {/* Menu mobile */}
       {mobileMenuOpen && (
         <div className="xl:hidden bg-surface border-b border-line px-6 py-5">
           <nav className="flex flex-col gap-3 text-sm font-bold text-ink">
@@ -176,6 +200,37 @@ export default function Header({ lang, onLanguageChange }: HeaderProps) {
                 {l.label}
               </Link>
             ))}
+
+            <div className="pt-3 mt-1 border-t border-line flex flex-col gap-2.5">
+              <Link
+                href="/connexion"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-surface2 text-ink border border-line font-black text-xs uppercase tracking-wider"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+                {t.studentLogin}
+              </Link>
+
+              <Link
+                href="/#contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-center py-2.5 rounded-lg bg-ink text-surface font-black text-xs uppercase tracking-wider"
+              >
+                {t.consultation}
+              </Link>
+            </div>
           </nav>
         </div>
       )}
