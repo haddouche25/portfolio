@@ -1,3 +1,4 @@
+-- 1. Reprise des niveaux initiaux
 INSERT IGNORE INTO `qcm_exam_levels` (`id`, `examId`, `level`)
 SELECT 
     CONCAT('lvl_', SUBSTRING(MD5(CONCAT(id, level, RAND())), 1, 16)),
@@ -20,27 +21,27 @@ SELECT
         WHEN 'BAC2_S' THEN '2bac'
         WHEN '2bac' THEN '2bac'
     END
-FROM `qcmexam`
+FROM `QcmExam`
 WHERE `level` IS NOT NULL;
 
--- Domaine de Définition : Tronc commun, 1bac, 2bac
+-- 2. Multi-niveaux : Domaine de définition
 INSERT IGNORE INTO `qcm_exam_levels` (`id`, `examId`, `level`)
-SELECT CONCAT('lvl_', SUBSTRING(MD5(RAND()), 1, 16)), id, 'tronc commun' 
-FROM `qcmexam` WHERE slug LIKE '%domaine-definition%';
+SELECT CONCAT('lvl_', SUBSTRING(MD5(CONCAT(id, 'tc', RAND())), 1, 16)), id, 'tronc commun' 
+FROM `QcmExam` WHERE slug LIKE '%domaine-definition%';
 
 INSERT IGNORE INTO `qcm_exam_levels` (`id`, `examId`, `level`)
-SELECT CONCAT('lvl_', SUBSTRING(MD5(RAND()), 1, 16)), id, '1bac' 
-FROM `qcmexam` WHERE slug LIKE '%domaine-definition%';
+SELECT CONCAT('lvl_', SUBSTRING(MD5(CONCAT(id, '1b', RAND())), 1, 16)), id, '1bac' 
+FROM `QcmExam` WHERE slug LIKE '%domaine-definition%';
 
 INSERT IGNORE INTO `qcm_exam_levels` (`id`, `examId`, `level`)
-SELECT CONCAT('lvl_', SUBSTRING(MD5(RAND()), 1, 16)), id, '2bac' 
-FROM `qcmexam` WHERE slug LIKE '%domaine-definition%';
+SELECT CONCAT('lvl_', SUBSTRING(MD5(CONCAT(id, '2b', RAND())), 1, 16)), id, '2bac' 
+FROM `QcmExam` WHERE slug LIKE '%domaine-definition%';
 
--- Dérivation (Partie 1) : 1bac, 2bac
+-- 3. Multi-niveaux : Dérivation
 INSERT IGNORE INTO `qcm_exam_levels` (`id`, `examId`, `level`)
-SELECT CONCAT('lvl_', SUBSTRING(MD5(RAND()), 1, 16)), id, '1bac' 
-FROM `qcmexam` WHERE slug LIKE '%derivation%';
+SELECT CONCAT('lvl_', SUBSTRING(MD5(CONCAT(id, '1b_d', RAND())), 1, 16)), id, '1bac' 
+FROM `QcmExam` WHERE slug LIKE '%derivation%';
 
 INSERT IGNORE INTO `qcm_exam_levels` (`id`, `examId`, `level`)
-SELECT CONCAT('lvl_', SUBSTRING(MD5(RAND()), 1, 16)), id, '2bac' 
-FROM `qcmexam` WHERE slug LIKE '%derivation%';
+SELECT CONCAT('lvl_', SUBSTRING(MD5(CONCAT(id, '2b_d', RAND())), 1, 16)), id, '2bac' 
+FROM `QcmExam` WHERE slug LIKE '%derivation%';

@@ -1,1 +1,1 @@
-ALTER TABLE `qcmexam` DROP COLUMN `level`;
+ALTER TABLE `QcmExam` DROP COLUMN `level`;

@@ -129,12 +129,25 @@ model QcmOption {
 }
 
 model Student {
-  id        String       @id @default(cuid())
-  fullName  String
-  email     String       @unique
-  createdAt DateTime     @default(now())
+  id                 String       @id @default(cuid())
+  fullName           String
+  firstName          String?
+  lastName           String?
+  email              String       @unique
+  phone              String?
+  level              SchoolLevel?
+  passwordHash       String?
+  mustChangePassword Boolean      @default(true)
+  isActive           Boolean      @default(true)
+  lastLoginAt        DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @default(now()) @updatedAt
 
-  attempts  QcmAttempt[]
+  attempts           QcmAttempt[]
+  reservations       Reservation[]
+
+  @@index([level])
+  @@index([isActive])
 }
 
 model QcmAttempt {
@@ -182,4 +195,35 @@ model ContactMessage {
 
   @@index([createdAt])
   @@index([status])
+}
+
+// Configuration d'une semaine spécifique
+model WeeklySchedule {
+  id          String   @id @default(cuid())
+  mondayDate  DateTime @unique // Identifiant unique de la semaine (la date du Lundi)
+  matrix      Json     // La grille 7x3 avec les couleurs
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Réservation garantie de l'élève
+model Reservation {
+  id          String   @id @default(cuid())
+  studentId   String
+  mondayDate  DateTime // Pour retrouver la semaine correspondante
+  jour        String   // ex: "Mardi"
+  horaire     String   // ex: "19H - 20H30"
+  createdAt   DateTime @default(now())
+
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([mondayDate])
+}
+
+// Le modèle permanent de ton emploi du temps
+model ScheduleTemplate {
+  id        String   @id @default("default") // Il n'y aura toujours qu'une seule ligne
+  matrix    Json
+  updatedAt DateTime @updatedAt
 }
