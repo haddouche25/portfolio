@@ -14,7 +14,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Configuration du viewport et de la couleur de thème pour la barre système mobile
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f97316" },
@@ -42,9 +41,17 @@ export const metadata: Metadata = {
     "1Bac SM",
     "QCM Didactique",
   ],
-  // Déclaration explicite du manifest PWA
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icons/icon-192.png", type: "image/png", sizes: "192x192" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: [
+      { url: "/icons/icon-192.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
   manifest: "/manifest.webmanifest",
-  // Optimisation iOS / Safari
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
