@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { SchoolLevel } from "@prisma/client";
-import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 

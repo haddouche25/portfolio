@@ -38,13 +38,14 @@ export async function GET(
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        // Rich, dynamic orange radial + linear gradient
         background:
-          "linear-gradient(135deg, #1e0847 0%, #111e6c 35%, #0077b6 70%, #d946ef 100%)",
+          "linear-gradient(135deg, #7c1a00 0%, #c2410c 30%, #ea580c 60%, #f97316 85%, #fb923c 100%)",
         padding: "40px",
         fontFamily: "sans-serif",
       }}
     >
-      {/* Carte Glassmorphism centrale */}
+      {/* Frosted Glassmorphism Container */}
       <div
         style={{
           height: "100%",
@@ -54,13 +55,13 @@ export async function GET(
           justifyContent: "space-between",
           alignItems: "center",
           borderRadius: "32px",
-          border: "1.5px solid rgba(255, 255, 255, 0.25)",
-          background: "rgba(15, 23, 42, 0.45)",
+          border: "1.5px solid rgba(255, 255, 255, 0.35)",
+          background: "rgba(0, 0, 0, 0.28)",
           padding: "45px 65px",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
         }}
       >
-        {/* Haut : Signature & URL www.mhaddouche.com agrandie */}
+        {/* Top: Name, Subtitle, and prominent Domain Pill */}
         <div
           style={{
             display: "flex",
@@ -87,30 +88,30 @@ export async function GET(
             style={{
               fontSize: "15px",
               fontWeight: "700",
-              color: "#f97316",
+              color: "rgba(255, 255, 255, 0.85)",
               letterSpacing: "0.5px",
             }}
           >
             Math Coach &amp; Software Consultant
           </span>
 
-          {/* www.mhaddouche.com Agrandie et mise en valeur */}
+          {/* www.mhaddouche.com Pill */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
               marginTop: "4px",
-              background: "rgba(255, 255, 255, 0.08)",
-              border: "1px solid rgba(255, 255, 255, 0.18)",
-              padding: "6px 20px",
-              borderRadius: "12px",
+              background: "rgba(255, 255, 255, 0.15)",
+              border: "1px solid rgba(255, 255, 255, 0.35)",
+              padding: "6px 22px",
+              borderRadius: "14px",
             }}
           >
             <span
               style={{
                 fontSize: "20px",
-                fontWeight: "800",
-                color: "#f8fafc",
+                fontWeight: "900",
+                color: "#ffffff",
                 letterSpacing: "1px",
               }}
             >
@@ -119,7 +120,7 @@ export async function GET(
           </div>
         </div>
 
-        {/* Centre : Badge de Niveau + Grand Titre Centré */}
+        {/* Center: School Level Badge & Large Centered Title */}
         <div
           style={{
             display: "flex",
@@ -129,7 +130,7 @@ export async function GET(
             textAlign: "center",
             maxWidth: "1050px",
             margin: "auto 0",
-            gap: "14px",
+            gap: "16px",
           }}
         >
           <div
@@ -137,14 +138,14 @@ export async function GET(
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              padding: "6px 24px",
+              padding: "6px 26px",
               borderRadius: "9999px",
-              background: "rgba(249, 115, 22, 0.2)",
-              border: "1.5px solid #f97316",
-              color: "#ffedd5",
-              fontSize: "16px",
-              fontWeight: "800",
+              background: "#ffffff",
+              color: "#c2410c",
+              fontSize: "17px",
+              fontWeight: "900",
               letterSpacing: "1px",
+              boxShadow: "0 4px 14px rgba(0, 0, 0, 0.2)",
             }}
           >
             {levelBadge}
@@ -163,14 +164,14 @@ export async function GET(
               color: "#ffffff",
               letterSpacing: "-1.5px",
               margin: 0,
-              textShadow: "0 4px 20px rgba(0, 0, 0, 0.35)",
+              textShadow: "0 4px 24px rgba(0, 0, 0, 0.35)",
             }}
           >
             {title}
           </h1>
         </div>
 
-        {/* Bas : Nombre de questions agrandi et centré */}
+        {/* Bottom: Question Count Banner */}
         <div
           style={{
             display: "flex",
@@ -184,17 +185,18 @@ export async function GET(
               display: "flex",
               alignItems: "center",
               gap: "14px",
-              background: "rgba(255, 255, 255, 0.1)",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
+              background: "rgba(255, 255, 255, 0.18)",
+              border: "1px solid rgba(255, 255, 255, 0.35)",
               padding: "12px 36px",
               borderRadius: "20px",
+              boxShadow: "0 8px 20px rgba(0, 0, 0, 0.15)",
             }}
           >
             <span
               style={{
                 fontSize: "30px",
                 fontWeight: "900",
-                color: "#f97316",
+                color: "#ffffff",
               }}
             >
               {questionsCount}
@@ -202,7 +204,7 @@ export async function GET(
             <span
               style={{
                 fontSize: "22px",
-                fontWeight: "700",
+                fontWeight: "800",
                 color: "#ffffff",
                 letterSpacing: "-0.2px",
               }}
