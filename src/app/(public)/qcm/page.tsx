@@ -84,66 +84,35 @@ interface Props {
 // 2. SEO & METADATA DYNAMIQUES
 // ---------------------------------------------------------------------------
 export async function generateMetadata({
-  searchParams,
-}: Props): Promise<Metadata> {
-  const { level } = await searchParams;
-  const current = resolveLevel(level);
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const exam = await prisma.qcmExam.findUnique({ where: { slug } });
 
-  const title = current
-    ? `QCM Maths ${current.label} (${current.seoName}) : Évaluations & Corrections`
-    : "QCM de Mathématiques en Ligne : Tests par Niveau (3AC, TC, 1Bac, 2Bac)";
-
-  const description = current
-    ? `Tests QCM interactifs de mathématiques pour le niveau ${current.seoName} : exercices chronométrés, diagnostic des acquis et corrections détaillées étape par étape.`
-    : "Plateforme didactique de QCM de mathématiques pour le collège et lycée au Maroc (3AC, Tronc Commun, 1Bac, 2Bac). Entraînement et bilans corrigés pas à pas.";
-
-  const keywords = current
-    ? [
-        `QCM maths ${current.label}`,
-        `QCM mathématiques ${current.seoName}`,
-        `exercices corrigés ${current.label}`,
-        `contrôles mathématiques ${current.label}`,
-        "didactique maths maroc",
-      ]
-    : [
-        "QCM maths",
-        "QCM 3AC",
-        "QCM Tronc Commun",
-        "QCM 1Bac SM",
-        "QCM 2Bac",
-        "mathématiques lycée maroc",
-        "exercices corrigés mathématiques",
-      ];
-
-  const canonicalPath = current ? `/qcm?level=${current.key}` : "/qcm";
-  const ogImageUrl = "/og/qcm.jpg";
+  const ogUrl = `/api/og/qcm/${slug}`;
 
   return {
-    title,
-    description,
-    keywords,
-    alternates: { canonical: canonicalPath },
+    title: `${exam?.title} | QCM Maths`,
+    description: exam?.description,
     openGraph: {
-      type: "website",
-      locale: "fr_FR",
-      siteName: "Mohamed Haddouche - Plateforme Didactique",
-      url: canonicalPath,
-      title,
-      description,
+      title: exam?.title,
+      description: exam?.description,
       images: [
         {
-          url: ogImageUrl,
+          url: ogUrl,
           width: 1200,
           height: 630,
-          alt: title,
+          alt: exam?.title,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title,
-      description,
-      images: [ogImageUrl],
+      title: exam?.title,
+      description: exam?.description,
+      images: [ogUrl],
     },
   };
 }

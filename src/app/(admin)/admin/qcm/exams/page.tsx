@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { DeleteExamButton } from "./DeleteExamButton";
 
 export const dynamic = "force-dynamic";
 
@@ -53,23 +54,28 @@ export default async function AdminExamsPage() {
               href={`/admin/qcm/exams/${exam.id}`}
               className="group block p-6 bg-slate-900 border border-slate-800 rounded-2xl hover:border-blue-500/50 hover:bg-slate-900/80 transition shadow-sm relative overflow-hidden"
             >
-              {/* Statuts & Durée */}
+              {/* Statuts, Durée & Bouton Supprimer */}
               <div className="flex justify-between items-center mb-3">
-                <span
-                  className={`text-[11px] font-mono uppercase font-semibold px-2.5 py-0.5 rounded-full border ${
-                    exam.published
-                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                      : "bg-amber-500/10 border-amber-500/30 text-amber-400"
-                  }`}
-                >
-                  {exam.published ? "Publié" : "Brouillon"}
-                </span>
-                <span className="text-xs text-slate-400 font-mono">
-                  ⏱{" "}
-                  {exam.timeLimitMinutes
-                    ? `${exam.timeLimitMinutes} min`
-                    : "Non chronométré"}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`text-[11px] font-mono uppercase font-semibold px-2.5 py-0.5 rounded-full border ${
+                      exam.published
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                        : "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                    }`}
+                  >
+                    {exam.published ? "Publié" : "Brouillon"}
+                  </span>
+                  <span className="text-xs text-slate-400 font-mono">
+                    ⏱{" "}
+                    {exam.timeLimitMinutes
+                      ? `${exam.timeLimitMinutes} min`
+                      : "Libre"}
+                  </span>
+                </div>
+
+                {/* Bouton de suppression avec arrêt de propagation */}
+                <DeleteExamButton examId={exam.id} examTitle={exam.title} />
               </div>
 
               {/* Titre & Description */}
