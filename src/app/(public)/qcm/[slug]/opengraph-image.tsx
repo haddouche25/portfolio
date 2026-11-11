@@ -24,7 +24,6 @@ interface Props {
 export default async function OpengraphImage({ params }: Props) {
   const { slug } = await params;
 
-  // Récupération de l'examen et de ses niveaux associés
   const exam = await prisma.qcmExam.findUnique({
     where: { slug },
     include: {
@@ -33,13 +32,10 @@ export default async function OpengraphImage({ params }: Props) {
     },
   });
 
-  const title = exam?.title || "Test QCM Mathématiques";
+  const title = exam?.title || "Évaluation QCM Mathématiques";
   const rawLevel = exam?.levels?.[0]?.level;
   const levelBadge = rawLevel ? LEVEL_LABELS[rawLevel] || rawLevel : "Maths";
   const questionsCount = exam?._count?.questions ?? 0;
-  const duration = exam?.timeLimitMinutes
-    ? `${exam.timeLimitMinutes} min`
-    : "Libre";
 
   return new ImageResponse(
     <div
@@ -47,168 +43,180 @@ export default async function OpengraphImage({ params }: Props) {
         height: "100%",
         width: "100%",
         display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        backgroundColor: "#0b0d11",
-        backgroundImage:
-          "radial-gradient(circle at 25px 25px, #1a1d24 2%, transparent 0%), radial-gradient(circle at 75px 75px, #1a1d24 2%, transparent 0%)",
-        backgroundSize: "100px 100px",
-        padding: "60px 70px",
+        alignItems: "center",
+        justifyContent: "center",
+        background:
+          "linear-gradient(135deg, #7c1a00 0%, #c2410c 30%, #ea580c 60%, #f97316 85%, #fb923c 100%)",
+        padding: "40px",
         fontFamily: "sans-serif",
-        color: "#ffffff",
-        border: "16px solid #14171f",
       }}
     >
-      {/* En-tête : Logo et Badges */}
+      {/* Conteneur Frosted Glassmorphism */}
       <div
         style={{
+          height: "100%",
+          width: "100%",
           display: "flex",
+          flexDirection: "column",
           justifyContent: "space-between",
           alignItems: "center",
+          borderRadius: "32px",
+          border: "1.5px solid rgba(255, 255, 255, 0.35)",
+          background: "rgba(0, 0, 0, 0.28)",
+          padding: "45px 65px",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div
+        {/* Haut : Nom, Titre & Domaine www.mhaddouche.com */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            gap: "8px",
+          }}
+        >
+          <span
             style={{
-              backgroundColor: "#f25c27",
-              width: "42px",
-              height: "42px",
-              borderRadius: "10px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "24px",
+              fontSize: "28px",
               fontWeight: "900",
               color: "#ffffff",
+              letterSpacing: "-0.5px",
+              textTransform: "uppercase",
             }}
           >
-            ∑
-          </div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
+            MOHAMED HADDOUCHE
+          </span>
+
+          <span
+            style={{
+              fontSize: "15px",
+              fontWeight: "700",
+              color: "rgba(255, 255, 255, 0.85)",
+              letterSpacing: "0.5px",
+            }}
+          >
+            Math Coach &amp; Software Consultant
+          </span>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginTop: "4px",
+              background: "rgba(255, 255, 255, 0.15)",
+              border: "1px solid rgba(255, 255, 255, 0.35)",
+              padding: "6px 22px",
+              borderRadius: "14px",
+            }}
+          >
             <span
               style={{
                 fontSize: "20px",
                 fontWeight: "900",
-                letterSpacing: "-0.5px",
-              }}
-            >
-              MOHAMED HADDOUCHE
-            </span>
-            <span
-              style={{
-                fontSize: "12px",
-                color: "#f25c27",
-                fontWeight: "700",
+                color: "#ffffff",
                 letterSpacing: "1px",
               }}
             >
-              PLATEFORME DIDACTIQUE
+              www.mhaddouche.com
             </span>
           </div>
         </div>
 
-        {/* Badge Niveau */}
+        {/* Centre : Badge Niveau & Titre de l'épreuve */}
         <div
           style={{
             display: "flex",
-            backgroundColor: "rgba(242, 92, 39, 0.15)",
-            border: "2px solid #f25c27",
-            color: "#f25c27",
-            borderRadius: "50px",
-            padding: "8px 24px",
-            fontSize: "20px",
-            fontWeight: "800",
-            textTransform: "uppercase",
-          }}
-        >
-          {levelBadge}
-        </div>
-      </div>
-
-      {/* Centre : Titre de l'épreuve */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "16px",
-          margin: "auto 0",
-        }}
-      >
-        <span
-          style={{
-            color: "#94a3b8",
-            fontSize: "18px",
-            fontWeight: "700",
-            textTransform: "uppercase",
-            letterSpacing: "2px",
-          }}
-        >
-          Évaluation Diagnostique &amp; Entraînement
-        </span>
-
-        <h1
-          style={{
-            fontSize: title.length > 50 ? "46px" : "56px",
-            fontWeight: "900",
-            lineHeight: 1.15,
-            color: "#ffffff",
-            letterSpacing: "-1px",
-            maxWidth: "1050px",
-          }}
-        >
-          {title}
-        </h1>
-      </div>
-
-      {/* Pied : Statistiques et Call to Action */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          borderTop: "2px solid #1e232d",
-          paddingTop: "30px",
-        }}
-      >
-        <div style={{ display: "flex", gap: "30px", alignItems: "center" }}>
-          <span
-            style={{ fontSize: "20px", color: "#cbd5e1", fontWeight: "600" }}
-          >
-            📝{" "}
-            <strong style={{ color: "#ffffff", marginLeft: "6px" }}>
-              {questionsCount}
-            </strong>{" "}
-            questions
-          </span>
-          <span
-            style={{ fontSize: "20px", color: "#cbd5e1", fontWeight: "600" }}
-          >
-            ⏱{" "}
-            <strong style={{ color: "#ffffff", marginLeft: "6px" }}>
-              {duration}
-            </strong>
-          </span>
-          <span
-            style={{ fontSize: "20px", color: "#22c55e", fontWeight: "700" }}
-          >
-            ✓ Correction détaillée
-          </span>
-        </div>
-
-        <div
-          style={{
-            backgroundColor: "#f25c27",
-            color: "#ffffff",
-            borderRadius: "14px",
-            padding: "12px 28px",
-            fontSize: "18px",
-            fontWeight: "800",
-            display: "flex",
+            flexDirection: "column",
             alignItems: "center",
-            boxShadow: "0 8px 20px rgba(242, 92, 39, 0.3)",
+            justifyContent: "center",
+            textAlign: "center",
+            maxWidth: "1050px",
+            margin: "auto 0",
+            gap: "16px",
           }}
         >
-          Démarrer le QCM →
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "6px 26px",
+              borderRadius: "9999px",
+              background: "#ffffff",
+              color: "#c2410c",
+              fontSize: "17px",
+              fontWeight: "900",
+              letterSpacing: "1px",
+              boxShadow: "0 4px 14px rgba(0, 0, 0, 0.2)",
+            }}
+          >
+            {levelBadge}
+          </div>
+
+          <h1
+            style={{
+              fontSize:
+                title.length > 55
+                  ? "46px"
+                  : title.length > 35
+                    ? "56px"
+                    : "66px",
+              fontWeight: "900",
+              lineHeight: 1.15,
+              color: "#ffffff",
+              letterSpacing: "-1.5px",
+              margin: 0,
+              textShadow: "0 4px 24px rgba(0, 0, 0, 0.35)",
+            }}
+          >
+            {title}
+          </h1>
+        </div>
+
+        {/* Bas : Nombre de questions */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "14px",
+              background: "rgba(255, 255, 255, 0.18)",
+              border: "1px solid rgba(255, 255, 255, 0.35)",
+              padding: "12px 36px",
+              borderRadius: "20px",
+              boxShadow: "0 8px 20px rgba(0, 0, 0, 0.15)",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "30px",
+                fontWeight: "900",
+                color: "#ffffff",
+              }}
+            >
+              {questionsCount}
+            </span>
+            <span
+              style={{
+                fontSize: "22px",
+                fontWeight: "800",
+                color: "#ffffff",
+                letterSpacing: "-0.2px",
+              }}
+            >
+              Questions avec Correction Détaillée
+            </span>
+          </div>
         </div>
       </div>
     </div>,
