@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { SchoolLevel } from "@prisma/client";
 
@@ -80,38 +81,47 @@ interface Props {
 }
 
 // ---------------------------------------------------------------------------
-// 2. SEO & METADATA DYNAMIQUES
+// 2. SEO & METADATA DU CATALOGUE
+// Le catalogue (/qcm) n'a PAS de paramètre "slug" : il lit seulement ?level=.
+// Aucune requête base de données ici (les métadonnées se calculent à chaque visite).
+// La version précédente copiait celle de /qcm/[slug] : findUnique({ slug: undefined }).
 // ---------------------------------------------------------------------------
 export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
-  const exam = await prisma.qcmExam.findUnique({ where: { slug } });
+  searchParams,
+}: Props): Promise<Metadata> {
+  const { level } = await searchParams;
+  const selected = resolveLevel(level);
 
-  const ogUrl = `/api/og/qcm/${slug}`;
+  const title = selected
+    ? `QCM de maths ${selected.label} : tests et corrections détaillées`
+    : "QCM de maths en ligne : tests par niveau et corrections";
+
+  const description = selected
+    ? `Tests QCM de mathématiques pour ${selected.seoName} : entraînement, bilans d'acquis et épreuves chronométrées avec correction détaillée pas à pas.`
+    : "Tests QCM de mathématiques du collège au lycée (3AC, Tronc commun, 1Bac, 2Bac) : entraînement, bilans d'acquis et corrections détaillées pas à pas.";
+
+  // Une URL canonique par niveau : les anciens alias (?level=BAC1_SM, ?level=1bac…)
+  // pointent tous vers la même adresse officielle.
+  const url = selected ? `/qcm?level=${selected.key}` : "/qcm";
 
   return {
-    title: `${exam?.title} | QCM Maths`,
-    description: exam?.description,
+    title,
+    description,
+    alternates: { canonical: url },
     openGraph: {
-      title: exam?.title,
-      description: exam?.description,
-      images: [
-        {
-          url: ogUrl,
-          width: 1200,
-          height: 630,
-          alt: exam?.title,
-        },
-      ],
+      type: "website",
+      locale: "fr_FR",
+      siteName: "Mohamed Haddouche",
+      url,
+      title,
+      description,
+      images: [{ url: "/og/qcm.jpg", width: 1200, height: 630, alt: title }],
     },
     twitter: {
       card: "summary_large_image",
-      title: exam?.title,
-      description: exam?.description,
-      images: [ogUrl],
+      title,
+      description,
+      images: ["/og/qcm.jpg"],
     },
   };
 }
