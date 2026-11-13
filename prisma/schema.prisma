@@ -51,6 +51,8 @@ model Article {
 }
 
 enum SchoolLevel {
+  COLLEGE_1AC   @map("1ac")
+  COLLEGE_2AC   @map("2ac")
   COLLEGE_3AC   @map("3ac")
   TRONC_COMMUN  @map("tronc commun")
   BAC_1         @map("1bac")

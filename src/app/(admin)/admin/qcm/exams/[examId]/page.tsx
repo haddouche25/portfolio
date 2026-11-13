@@ -90,6 +90,13 @@ export default async function AdminExamQuestionsDetailPage({
             <span className="px-3.5 py-1.5 rounded-xl bg-blue-950/60 border border-blue-800 text-blue-300 text-xs font-semibold">
               {exam.questions.length} questions au total
             </span>
+
+            <Link
+              href={`/admin/qcm/exams/${exam.id}/edit`}
+              className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-semibold transition"
+            >
+              Modifier l&apos;examen
+            </Link>
           </div>
         </div>
       </div>
@@ -113,14 +120,23 @@ export default async function AdminExamQuestionsDetailPage({
                 </span>
 
                 <div className="flex-1 space-y-3">
-                  {/* Badges métadonnées */}
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-950 border border-blue-800 text-blue-300">
-                      {q.topic}
-                    </span>
-                    <span className="px-2.5 py-0.5 rounded-full text-[11px] bg-slate-800 text-slate-400">
-                      {q.difficulty}
-                    </span>
+                  {/* Badges métadonnées & Lien d'édition */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-950 border border-blue-800 text-blue-300">
+                        {q.topic}
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] bg-slate-800 text-slate-400">
+                        {q.difficulty}
+                      </span>
+                    </div>
+
+                    <Link
+                      href={`/admin/qcm/exams/${exam.id}/questions/${q.id}/edit`}
+                      className="text-xs font-mono text-slate-400 hover:text-[#eb4d16] transition"
+                    >
+                      Modifier &rarr;
+                    </Link>
                   </div>
 
                   {/* Énoncé avec KaTeX */}

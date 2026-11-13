@@ -17,6 +17,18 @@ type LevelConfig = {
 
 const LEVELS: LevelConfig[] = [
   {
+    key: SchoolLevel.COLLEGE_1AC,
+    label: "1AC",
+    seoName: "1ème Année Collège (1AC)",
+    aliases: ["1AC", "COLLEGE_1AC", "1ac"],
+  },
+  {
+    key: SchoolLevel.COLLEGE_2AC,
+    label: "2AC",
+    seoName: "2ème Année Collège (2AC)",
+    aliases: ["2AC", "COLLEGE_2AC", "2ac"],
+  },
+  {
     key: SchoolLevel.COLLEGE_3AC,
     label: "3AC",
     seoName: "3ème Année Collège (3AC)",
