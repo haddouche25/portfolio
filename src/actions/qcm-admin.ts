@@ -2,25 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-
-async function requireAdmin() {
-  const session = await getServerSession(authOptions);
-  const userEmail = session?.user?.email?.trim().toLowerCase();
-  const expectedEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const userRole = (session?.user as { role?: string } | undefined)?.role;
-
-  const isAdmin =
-    Boolean(session?.user) &&
-    (userRole === "ADMIN" ||
-      (Boolean(expectedEmail) && userEmail === expectedEmail));
-
-  if (!isAdmin) {
-    throw new Error("Accès non autorisé");
-  }
-}
+import { requireAdmin } from "@/lib/session";
 
 export async function updateQcmExamAction(examId: string, formData: FormData) {
   await requireAdmin();
